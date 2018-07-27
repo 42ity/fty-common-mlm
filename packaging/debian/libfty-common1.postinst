@@ -1,8 +1,0 @@
-#!/bin/sh
-# fty-common postinst script 
-set -e
-
-if [ "$1" = "configure" ]; then
-	chown www-data:root /etc/fty/fty-session.cfg
-	chmod 644 /etc/fty/fty-session.cfg
-fi
