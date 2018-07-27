@@ -1,12 +1,12 @@
 <project
-    name = "fty-common"
-    description = "Provides common tools for agents"
+    name = "fty-common-mlm"
+    description = "Provides common Malamute and ZeroMQ tools for agents"
     script = "zproject.gsl"
     email = "EatonIPCOpenSource@eaton.com"
     url = "https://42ity.org"
     license = "GPL-2.0+"
-    repository = "https://github.com/42ity/fty-common"
-    header = "fty_common.h"
+    repository = "https://github.com/42ity/fty-common-mlm"
+    header = "fty_common_mlm.h"
     >
 
     <target name = "debian" />
@@ -37,57 +37,29 @@
             <use project = "libsodium" prefix = "sodium"
                 repository = "https://github.com/42ity/libsodium.git"
                 release = "1.0.5-FTY-master"
-                test = "sodium_init" />
+                test = "sodium_init"
+                />
         </use>
     </use>
 
-    <use project = "cxxtools"
-        test="cxxtools::Utf8Codec::Utf8Codec"
-        header = "cxxtools/allocator.h"
-        repository = "https://github.com/42ity/cxxtools.git"
-        release = "2.2-FTY-master"
+    <use project = "malamute" min_major = "1" test = "mlm_server_test"
+        repository="https://github.com/42ity/malamute.git"
+        release = "1.0-FTY-master"
         />
 
-    <use project = "tntnet"
-        header = "tnt/tntnet.h"
-        repository = "https://github.com/42ity/tntnet.git"
-        release = "2.2-FTY-master"
+    <use project = "fty-common-logging" libname = "libfty_common_logging" header="fty_log.h"
+        repository = "https://github.com/42ity/fty-common-logging.git"
+        release = "master"
+        test = "fty_log_selftest" >
+        <use project = "log4cplus" header = "log4cplus/logger.h" test = "appender_test"
+            repository = "https://github.com/42ity/log4cplus.git"
+            release = "1.1.2-FTY-master"
+            />
+    </use>
+
+    <use project = "openssl" header = "openssl/sha.h" debian_name="libssl-dev"
         />
 
-    <use project = "tntdb"
-        test="tntdb::Date::gmtime"
-        repository = "https://github.com/42ity/tntdb.git"
-        release = "1.3-FTY-master"
-        builddir = "tntdb" />
-    <!-- use project = "tntdb" test="tntdb::connectCached" header="tntdb/connect.h" / -->
-    <!-- use project = "tntdb" test="tntdb::Date::gmtime" header="tntdb/connect.h" / -->
-
-    <use project = "libsasl2" header = "sasl/sasl.h"
-        debian_name="libsasl2-dev"
-        redhat_name="cyrus-sasl-devel"
-    />
-
-    <use project = "log4cplus"
-        header = "log4cplus/logger.h"
-        test = "appender_test"
-        release="1.1.2-FTY-master"
-        repository="https://github.com/42ity/log4cplus.git" />
-
-    <use project = "openssl" header = "openssl/sha.h" debian_name="libssl-dev"/>
-
-    <class name = "fty-common/log/fty_log">Log management</class>
-    <class name = "fty-common/common/fty_commons" >Singleton object and common functions</class>
-
-    <class name = "fty-common/web/helpers" selftest = "0" />
-    <class name = "fty-common/web/sasl" selftest = "0" />
-    <class name = "fty-common/web/tokens" selftest = "0" />
-    <class name = "fty-common/web/utils_web" selftest = "0" />
-    <class name = "fty-common/web/audit_log" selftest = "0">Manage audit log</class>
-    
-    <class name = "fty-common/common/str_defs" selftest = "0" />
-    <class name = "fty-common/common/filesystem" selftest = "0" />
-    <class name = "fty-common/common/fty_uuid" > Calculates UUID for assets.</class>
-
-    <class name = "fty-common/db/dbpath" selftest = "0" />
+    <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
 
 </project>

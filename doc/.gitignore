@@ -11,28 +11,8 @@
 *.xml7
 
 # Ignore the source doc texts generated from program sources
-fty_common_log_fty_log.txt
-fty_common_log_fty_log.doc
-fty_common_common_fty_commons.txt
-fty_common_common_fty_commons.doc
-fty_common_web_helpers.txt
-fty_common_web_helpers.doc
-fty_common_web_sasl.txt
-fty_common_web_sasl.doc
-fty_common_web_tokens.txt
-fty_common_web_tokens.doc
-fty_common_web_utils_web.txt
-fty_common_web_utils_web.doc
-fty_common_web_audit_log.txt
-fty_common_web_audit_log.doc
-fty_common_common_str_defs.txt
-fty_common_common_str_defs.doc
-fty_common_common_filesystem.txt
-fty_common_common_filesystem.doc
-fty_common_common_fty_uuid.txt
-fty_common_common_fty_uuid.doc
-fty_common_db_dbpath.txt
-fty_common_db_dbpath.doc
+fty_common_mlm_uuid.txt
+fty_common_mlm_uuid.doc
 
 # Make sure to track the manually maintained project description
 !*.adoc

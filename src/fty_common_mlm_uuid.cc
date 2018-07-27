@@ -27,7 +27,7 @@
 */
 
 #include  <openssl/sha.h>
-#include "../../fty_common_classes.h"
+#include "fty_common_mlm_classes.h"
 //#include  "fty-common/common/fty_uuid.h"
 //  Structure of our class
 

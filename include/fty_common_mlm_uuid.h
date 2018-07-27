@@ -19,8 +19,8 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_COMMON_FTY_UUID_H_INCLUDED
-#define FTY_COMMON_COMMON_FTY_UUID_H_INCLUDED
+#ifndef FTY_COMMON_MLM_UUID_H_INCLUDED
+#define FTY_COMMON_MLM_UUID_H_INCLUDED
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +30,7 @@ extern "C" {
 typedef struct _fty_uuid_t fty_uuid_t;
 
 //  Create a new fty_uuid
-FTY_COMMON_EXPORT fty_uuid_t *
+FTY_COMMON_MLM_EXPORT fty_uuid_t *
     fty_uuid_new (void);
 
 //  Destroy the fty_uuid
@@ -49,7 +49,7 @@ const char*
 // If we have all necessary information (serial nr, model, manufacturer) we
 // calculate uuid. I we don't and asset type is device we use ffff-...
 // otherwise some random uuid is generated for other asset types.
-FTY_COMMON_EXPORT const char*
+FTY_COMMON_MLM_EXPORT const char*
     fty_uuid_create (zhash_t *ext, const char *asset_type, fty_uuid_t *uuid);
 
 //  Self test of this class
