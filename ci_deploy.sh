@@ -11,7 +11,7 @@ set -e
 if [ "$BUILD_TYPE" == "default" ]; then
     # Tell travis to deploy all files in dist
     mkdir dist
-    export FTY_COMMON_DEPLOYMENT=dist/*
+    export FTY_COMMON_MLM_DEPLOYMENT=dist/*
     # Move archives to dist
     mv *.tar.gz dist
     mv *.zip dist
@@ -22,8 +22,8 @@ if [ "$BUILD_TYPE" == "default" ]; then
     cd -
 elif [ "$BUILD_TYPE" == "bindings" ] && [ "$BINDING" == "jni" ]; then
     ( cd bindings/jni && TERM=dumb PKG_CONFIG_PATH=/tmp/lib/pkgconfig ./gradlew clean bintrayUpload )
-    cp bindings/jni/android/fty_common-android.jar fty_common-android-1.0.0.jar
-    export FTY_COMMON_DEPLOYMENT=fty_common-android-1.0.0.jar
+    cp bindings/jni/android/fty_common_mlm-android.jar fty_common_mlm-android-1.0.0.jar
+    export FTY_COMMON_MLM_DEPLOYMENT=fty_common_mlm-android-1.0.0.jar
 else
-    export FTY_COMMON_DEPLOYMENT=""
+    export FTY_COMMON_MLM_DEPLOYMENT=""
 fi

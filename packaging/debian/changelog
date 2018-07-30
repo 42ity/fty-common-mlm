@@ -1,5 +1,5 @@
-fty-common (1.0.0) UNRELEASED; urgency=low
+fty-common-mlm (1.0.0) UNRELEASED; urgency=low
 
   * Initial packaging.
 
- -- fty-common Developers <eatonipcopensource@eaton.com>  Wed, 31 Dec 2014 00:00:00 +0000
+ -- fty-common-mlm Developers <eatonipcopensource@eaton.com>  Wed, 31 Dec 2014 00:00:00 +0000

@@ -16,9 +16,8 @@ os:
 # in the default container with sudo==false, consider requiring a docker
 # image and/or a newer Ubuntu Trusty baseline VM, by uncommenting below.
 # See the current docs on http://travis-ci.org for up-to-date options.
-# NOTE: Here we need this for .travis.fix* script(s) below.
-#sudo: false
-sudo: required
+sudo: false
+#sudo: required
 
 #dist:
 #- trusty
@@ -58,7 +57,6 @@ env:
 
 # Prerequisite packages provided by OS distro and used "as is"
 pkg_deps_prereqs_distro: &pkg_deps_prereqs_distro
-    - libsasl2-dev
     - libssl-dev
 
 # Prerequisite packages that may be built from source or used from
@@ -67,12 +65,10 @@ pkg_deps_prereqs_source: &pkg_deps_prereqs_source
     - libsodium-dev
     - libzmq3-dev
     - libczmq-dev
-    - cxxtools-dev
-    - tntnet-dev
-    - tntdb-dev
+    - libmlm-dev
     - log4cplus-dev
+    - libfty-common-logging-dev
 
-# NOTE: Our forks are checked out and built without pkg dependencies in use
 pkg_deps_prereqs: &pkg_deps_prereqs
 #    - *pkg_deps_prereqs_source
     - *pkg_deps_prereqs_distro
@@ -135,7 +131,7 @@ matrix:
 # to have dependencies ready and pass configure script before making this check).
 # Note that the autotools variant will also require dependencies preinstalled to
 # pass its configure script:
-  - env: BUILD_TYPE=clang-format-check CLANG_FORMAT=clang-format-5.0
+#  - env: BUILD_TYPE=clang-format-check CLANG_FORMAT=clang-format-5.0
     os: linux
     dist: trusty
     addons:
@@ -145,15 +141,11 @@ matrix:
         packages:
         - clang-5.0
         - clang-format-5.0
-        - *pkg_deps_prereqs
+#autotools#        - *pkg_deps_prereqs
 
 before_install:
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
-
-### Note: Fix up SASL pkgconfig before build
-before_script:
-- ./.travis.fixsasl
 
 # Hand off to generated script for each BUILD_TYPE
 script: ./ci_build.sh
@@ -164,7 +156,7 @@ deploy:
     # To encrypt your access token run: `travis encrypt -r user/repo`
     secure: <encrypted github access token>
   file_glob: true
-  file: ${FTY_COMMON_DEPLOYMENT}
+  file: ${FTY_COMMON_MLM_DEPLOYMENT}
   skip_cleanup: true
   on:
     branch: master

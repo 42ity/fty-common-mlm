@@ -1,5 +1,5 @@
 #
-#    fty-common - Provides common tools for agents
+#    fty-common-mlm - Provides common Malamute and ZeroMQ tools for agents
 #
 #    Copyright (C) 2014 - 2018 Eaton
 #
@@ -17,33 +17,31 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-Source:         fty-common
+Source:         fty-common-mlm
 Section:        net
 Priority:       optional
-Maintainer:     fty-common Developers <eatonipcopensource@eaton.com>
+Maintainer:     fty-common-mlm Developers <eatonipcopensource@eaton.com>
 Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
     pkg-config,
     libsodium-dev,
     libzmq3-dev,
     libczmq-dev,
-    libcxxtools-dev,
-    libtntnet-dev,
-    libtntdb-dev,
-    libsasl2-dev,
+    libmlm-dev,
     liblog4cplus-dev,
+    libfty-common-logging-dev,
     libssl-dev,
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
-Package: libfty-common1
+Package: libfty-common-mlm1
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: fty-common shared library
- This package contains shared library for fty-common:
- provides common tools for agents
+Description: fty-common-mlm shared library
+ This package contains shared library for fty-common-mlm:
+ provides common malamute and zeromq tools for agents
 
-Package: libfty-common-dev
+Package: libfty-common-mlm-dev
 Architecture: any
 Section: libdevel
 Depends:
@@ -51,25 +49,23 @@ Depends:
     libsodium-dev,
     libzmq3-dev,
     libczmq-dev,
-    libcxxtools-dev,
-    libtntnet-dev,
-    libtntdb-dev,
-    libsasl2-dev,
+    libmlm-dev,
     liblog4cplus-dev,
+    libfty-common-logging-dev,
     libssl-dev,
-    libfty-common1 (= ${binary:Version})
-Description: fty-common development tools
- This package contains development files for fty-common:
- provides common tools for agents
+    libfty-common-mlm1 (= ${binary:Version})
+Description: fty-common-mlm development tools
+ This package contains development files for fty-common-mlm:
+ provides common malamute and zeromq tools for agents
 
 
-Package: fty-common-dbg
+Package: fty-common-mlm-dbg
 Architecture: any
 Section: debug
 Priority: optional
 Depends:
-    libfty-common1 (= ${binary:Version}),
+    libfty-common-mlm1 (= ${binary:Version}),
     ${misc:Depends}
-Description: fty-common debugging symbols
- This package contains the debugging symbols for fty-common:
- provides common tools for agents.
+Description: fty-common-mlm debugging symbols
+ This package contains the debugging symbols for fty-common-mlm:
+ provides common malamute and zeromq tools for agents.

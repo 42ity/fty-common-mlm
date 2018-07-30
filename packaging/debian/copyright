@@ -1,9 +1,9 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: fty-common
+Upstream-Name: fty-common-mlm
 
 Files: *
-Copyright: 2015- fty-common Developers <eatonipcopensource@eaton.com>
-License: fty-common_license
+Copyright: 2015- fty-common-mlm Developers <eatonipcopensource@eaton.com>
+License: fty-common-mlm_license
  Copyright (C) 2014 - 2018 Eaton
  .
  This program is free software; you can redistribute it and/or modify

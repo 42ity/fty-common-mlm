@@ -12,16 +12,14 @@ AM_CPPFLAGS = \
     ${libsodium_CFLAGS} \
     ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
-    ${cxxtools_CFLAGS} \
-    ${tntnet_CFLAGS} \
-    ${tntdb_CFLAGS} \
-    ${libsasl2_CFLAGS} \
+    ${malamute_CFLAGS} \
     ${log4cplus_CFLAGS} \
+    ${fty_common_logging_CFLAGS} \
     ${openssl_CFLAGS} \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${cxxtools_LIBS} ${tntnet_LIBS} ${tntdb_LIBS} ${libsasl2_LIBS} ${log4cplus_LIBS} ${openssl_LIBS}
+project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${openssl_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -45,11 +43,9 @@ EXTRA_DIST += \
     Findlibsodium.cmake \
     Findlibzmq.cmake \
     Findczmq.cmake \
-    Findcxxtools.cmake \
-    Findtntnet.cmake \
-    Findtntdb.cmake \
-    Findlibsasl2.cmake \
+    Findmalamute.cmake \
     Findlog4cplus.cmake \
+    Findfty_common_logging.cmake \
     Findopenssl.cmake \
     builds/cmake/Modules/ClangFormat.cmake \
     builds/cmake/clang-format-check.sh.in \
@@ -59,7 +55,7 @@ endif
 
 EXTRA_DIST += \
     README.md \
-    src/fty_common_classes.h
+    src/fty_common_mlm_classes.h
 
 # NOTE: this "include" syntax is not a "make" but an "autotools" keyword,
 # see https://www.gnu.org/software/automake/manual/html_node/Include.html

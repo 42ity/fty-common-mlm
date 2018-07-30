@@ -3,22 +3,12 @@
 #  Read the zproject/README.md for information about making permanent changes. #
 ################################################################################
 nobase_include_HEADERS = \
-    fty_common.h \
-    fty_common_library.h
+    fty_common_mlm.h \
+    fty_common_mlm_library.h
 
 if ENABLE_DRAFTS
 nobase_include_HEADERS += \
-    fty-common/log/fty_log.h \
-    fty-common/common/fty_commons.h \
-    fty-common/web/helpers.h \
-    fty-common/web/sasl.h \
-    fty-common/web/tokens.h \
-    fty-common/web/utils_web.h \
-    fty-common/web/audit_log.h \
-    fty-common/common/str_defs.h \
-    fty-common/common/filesystem.h \
-    fty-common/common/fty_uuid.h \
-    fty-common/db/dbpath.h
+    fty_common_mlm_uuid.h
 
 endif
 
