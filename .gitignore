@@ -133,3 +133,16 @@ nbproject/
 
 # editor backups
 *~
+
+#CMake files
+CMakeLists.txt
+Findczmq.cmake
+Findfty_common_logging.cmake
+Findlibsodium.cmake
+Findlibzmq.cmake
+Findcxxtools.cmake
+Findlog4cplus.cmake
+Findmalamute.cmake
+Findopenssl.cmake
+builds/cmake/
+
