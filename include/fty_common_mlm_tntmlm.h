@@ -37,7 +37,7 @@ class MlmClient {
         static const std::string ENDPOINT;
 
         MlmClient ();
-        ~MlmClient ();
+        virtual ~MlmClient ();
 
         // timeout <0, 300> seconds, greater number trimmed
         // based on specified uuid returns expected message or NULL on expire/interrupt
