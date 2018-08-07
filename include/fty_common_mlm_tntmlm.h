@@ -41,7 +41,7 @@ class MlmClient {
 
         // timeout <0, 300> seconds, greater number trimmed
         // based on specified uuid returns expected message or NULL on expire/interrupt
-        zmsg_t*     recv (const std::string& uuid, uint32_t timeout);
+        virtual zmsg_t*     recv (const std::string& uuid, uint32_t timeout);
 
         // implements request reply pattern
         // method prepends two frames
@@ -49,7 +49,7 @@ class MlmClient {
                                   const std::string& subject,
                                   uint32_t timeout,
                                   zmsg_t **content_p);
-        int         sendto (const std::string& address,
+        virtual int         sendto (const std::string& address,
                             const std::string& subject,
                             uint32_t timeout,
                             zmsg_t **content_p);
