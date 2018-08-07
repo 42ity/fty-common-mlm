@@ -47,6 +47,11 @@
         release = "1.0-FTY-master"
         />
 
+    <use project = "cxxtools" test="cxxtools::Utf8Codec::Utf8Codec" header="cxxtools/allocator.h"
+        repository = "https://github.com/42ity/cxxtools.git"
+        release = "2.2-FTY-master"
+        />
+
     <use project = "fty-common-logging" libname = "libfty_common_logging" header="fty_log.h"
         repository = "https://github.com/42ity/fty-common-logging.git"
         release = "master"
@@ -61,5 +66,6 @@
         />
 
     <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
+    <class name = "fty_common_mlm_tntmlm" selftest = "0" stable = "1" />
 
 </project>

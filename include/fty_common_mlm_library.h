@@ -32,6 +32,7 @@
 //  External dependencies
 #include <czmq.h>
 #include <malamute.h>
+#include <cxxtools/allocator.h>
 #include <fty_log.h>
 #include <openssl/sha.h>
 
@@ -83,12 +84,15 @@
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 typedef struct _fty_common_mlm_uuid_t fty_common_mlm_uuid_t;
 #define FTY_COMMON_MLM_UUID_T_DEFINED
+typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
+#define FTY_COMMON_MLM_TNTMLM_T_DEFINED
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 
 //  Public classes, each with its own header file
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 #include "fty_common_mlm_uuid.h"
+#include "fty_common_mlm_tntmlm.h"
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API

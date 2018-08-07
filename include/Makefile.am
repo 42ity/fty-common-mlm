@@ -8,7 +8,8 @@ nobase_include_HEADERS = \
 
 if ENABLE_DRAFTS
 nobase_include_HEADERS += \
-    fty_common_mlm_uuid.h
+    fty_common_mlm_uuid.h \
+    fty_common_mlm_tntmlm.h
 
 endif
 

@@ -51,6 +51,7 @@ BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
+BuildRequires:  cxxtools-devel
 BuildRequires:  log4cplus-devel
 BuildRequires:  fty-common-logging-devel
 BuildRequires:  openssl-devel
@@ -81,6 +82,7 @@ Requires:       libsodium-devel
 Requires:       zeromq-devel
 Requires:       czmq-devel
 Requires:       malamute-devel
+Requires:       cxxtools-devel
 Requires:       log4cplus-devel
 Requires:       fty-common-logging-devel
 Requires:       openssl-devel
