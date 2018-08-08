@@ -66,6 +66,6 @@
         />
 
     <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
-    <class name = "fty_common_mlm_tntmlm" selftest = "0" stable = "1" />
+    <class name = "fty_common_mlm_tntmlm" stable = "1" />
 
 </project>

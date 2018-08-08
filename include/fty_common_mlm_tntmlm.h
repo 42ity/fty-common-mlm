@@ -68,4 +68,6 @@ typedef cxxtools::Pool <MlmClient> MlmClientPool;
 
 extern MlmClientPool mlm_pool;
 
+void fty_common_mlm_tntmlm_test (bool verbose);
+
 #endif
