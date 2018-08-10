@@ -4,6 +4,7 @@
 ################################################################################
 nobase_include_HEADERS = \
     fty_common_mlm.h \
+    fty_common_mlm_guards.h \
     fty_common_mlm_library.h
 
 if ENABLE_DRAFTS
