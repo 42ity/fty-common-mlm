@@ -65,6 +65,7 @@
     <use project = "openssl" header = "openssl/sha.h" debian_name="libssl-dev"
         />
 
+    <header name = "fty_common_mlm_guards" stable = "1" > C++ wrapper for czmq / malamute objects with automatic cleanup </header>
     <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
     <class name = "fty_common_mlm_tntmlm" stable = "1" />
 
