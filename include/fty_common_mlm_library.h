@@ -46,7 +46,6 @@
 #define FTY_COMMON_MLM_VERSION \
     FTY_COMMON_MLM_MAKE_VERSION(FTY_COMMON_MLM_VERSION_MAJOR, FTY_COMMON_MLM_VERSION_MINOR, FTY_COMMON_MLM_VERSION_PATCH)
 
-
 #if defined (__WINDOWS__)
 #   if defined FTY_COMMON_MLM_STATIC
 #       define FTY_COMMON_MLM_EXPORT
@@ -83,6 +82,8 @@
 //  These classes are stable or legacy and built in all releases
 //  Draft classes are by default not built in stable releases
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
+typedef struct _fty_common_mlm_subprocess_t fty_common_mlm_subprocess_t;
+#define FTY_COMMON_MLM_SUBPROCESS_T_DEFINED
 typedef struct _fty_common_mlm_uuid_t fty_common_mlm_uuid_t;
 #define FTY_COMMON_MLM_UUID_T_DEFINED
 typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
@@ -93,6 +94,7 @@ typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
 //  Public classes, each with its own header file
 #include "fty_common_mlm_guards.h"
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
+#include "fty_common_mlm_subprocess.h"
 #include "fty_common_mlm_uuid.h"
 #include "fty_common_mlm_tntmlm.h"
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API

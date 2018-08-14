@@ -11,6 +11,8 @@
 *.xml7
 
 # Ignore the source doc texts generated from program sources
+fty_common_mlm_subprocess.txt
+fty_common_mlm_subprocess.doc
 fty_common_mlm_uuid.txt
 fty_common_mlm_uuid.doc
 fty_common_mlm_tntmlm.txt
