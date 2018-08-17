@@ -88,6 +88,8 @@ typedef struct _fty_common_mlm_uuid_t fty_common_mlm_uuid_t;
 #define FTY_COMMON_MLM_UUID_T_DEFINED
 typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
 #define FTY_COMMON_MLM_TNTMLM_T_DEFINED
+typedef struct _fty_common_mlm_utils_t fty_common_mlm_utils_t;
+#define FTY_COMMON_MLM_UTILS_T_DEFINED
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 
@@ -97,6 +99,7 @@ typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
 #include "fty_common_mlm_subprocess.h"
 #include "fty_common_mlm_uuid.h"
 #include "fty_common_mlm_tntmlm.h"
+#include "fty_common_mlm_utils.h"
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
