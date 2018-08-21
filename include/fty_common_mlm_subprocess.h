@@ -22,6 +22,7 @@
 #ifndef FTY_COMMON_SUBPROCESS_H_INCLUDED
 #define FTY_COMMON_SUBPROCESS_H_INCLUDED
 
+#ifdef __cplusplus
 #include <cxxtools/posix/fork.h>
 
 #include <climits>
@@ -34,6 +35,8 @@
 #include <sstream>
 #include <map>
 
+
+namespace MlmSubprocess {
 //! \brief list of arguments
 typedef std::vector<std::string> Argv;
 
@@ -203,4 +206,23 @@ output(
     const std::string& i, uint64_t timeout = 0, size_t timestep = 500);
 
 
+// MVY: dumber version of output
+//      it seems that zloop+tntnet threads are not compatible
+//      it crashes the stack
+//      it can't be easily debuged
+//      it can't be easily fixed
+//      this is just workaround
+//      and as a consequence, systemctl call becomes MORE
+//      expensive than today, which harms testing, but not
+//      the UI and UX for the product
+
+// returns
+//      positive return value of a process
+//      negative is a number of a signal which terminates process
+int
+simple_output (const Argv& args, std::string& o, std::string& e);
+
+
+} //end namespace
+#endif
 #endif
