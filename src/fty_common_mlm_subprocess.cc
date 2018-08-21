@@ -32,6 +32,7 @@
 
 #include "fty_common_mlm_subprocess.h"
 
+namespace MlmSubprocess {
 // forward declaration of helper functions
 // TODO: move somewhere else
 
@@ -535,3 +536,52 @@ static int s_output2(SubProcess& p, std::string& o, uint64_t timeout, size_t tim
     o.assign(out.str ());
     return r;
 }
+
+// MVY: dumber version of shared::output
+//      it seems that zloop+tntnet threads are not compatible
+//      it crashes the stack
+//      it can't be easily debuged
+//      it can't be easily fixed
+//      this is just workaround
+//      and as a consequence, systemctl call becomes MORE
+//      expensive than today, which harms testing, but not
+//      the UI and UX for the product
+
+// returns
+//      positive return value of a process
+//      negative is a number of a signal which terminates process
+int
+simple_output (const Argv& args, std::string& o, std::string& e)
+{
+
+    static unsigned timeout = 5;
+    SubProcess p (args, SubProcess::STDOUT_PIPE | SubProcess::STDERR_PIPE);
+    p.run();
+
+    unsigned int tme = 0;
+    int ret = 0;
+
+    std::string out;
+    std::string err;
+
+    while ((tme < timeout) && p.isRunning ()) {
+        ret = p.wait ((unsigned int) 1);
+        out += wait_read_all (p.getStdout ());
+        err += wait_read_all (p.getStderr ());
+        tme++;
+    }
+    if (p.isRunning ()) {
+        // graceful sigterm, delay, maybe sigkill+wait
+        ret = p.terminate ();
+    }
+    else
+        ret = p.poll ();
+    out += wait_read_all (p.getStdout ());
+    err += wait_read_all (p.getStderr ());
+
+    o.assign (out);
+    e.assign (err);
+    return ret;
+}
+
+} // end namespace
