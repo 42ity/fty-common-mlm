@@ -659,7 +659,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     memset((void*) buf, '\0', 1023);
     rv = read(proc.getStderr(), (void*) buf, 1023);
     assert(rv >= 0);
-    assert(rv == strlen(buf));
+    assert(rv == (ssize_t)strlen(buf));
     assert(strlen(buf) > 42);
 
     //nothing on stdout
@@ -694,7 +694,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     memset((void*) buf, '\0', 1023);
     rv = read(proc.getStdout(), (void*) buf, 1023);
     assert(rv >= 0);
-    assert(rv == strlen(buf));
+    assert(rv == (ssize_t)strlen(buf));
     assert(strlen(buf) == 9);
 
     assert(ret == 0);
@@ -728,7 +728,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     ::memset((void*) buf, '\0', 1023);
     rv = ::read(proc.getStdout(), (void*) buf, strlen(ibuf));
     assert(rv >= 0);
-    assert(rv == strlen(buf));
+    assert(rv == (ssize_t)strlen(buf));
     assert(strlen(buf) == strlen(ibuf));
     assert(strcmp(buf, ibuf) == 0);
 
@@ -923,7 +923,6 @@ fty_common_mlm_subprocess_test (bool verbose)
     {
     std::vector<std::string> argv{"/n/o/b/i/n/a/r/y",};
     int ret;
-    bool bret;
 
     ret = MlmSubprocess::call(argv);
     assert(ret != 0);
