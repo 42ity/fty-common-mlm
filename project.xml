@@ -66,7 +66,7 @@
         />
 
     <header name = "fty_common_mlm_guards" stable = "1" > C++ wrapper for czmq / malamute objects with automatic cleanup </header>
-    <class name = "fty_common_mlm_subprocess" selftest = "0" stable = "1" >C++ Wrapper around cxxtools::Fork</class>
+    <class name = "fty_common_mlm_subprocess" stable = "1" >C++ Wrapper around cxxtools::Fork</class>
     <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
     <class name = "fty_common_mlm_tntmlm" stable = "1" />
     <class name = "fty_common_mlm_utils"  selftest = "0" stable = "1" />
