@@ -29,17 +29,6 @@
 
 #include "fty_common_mlm_classes.h"
 
-#ifndef streq
-/*
- *  Allow projects without czmq dependency:
- *  The generated code expects that czmq pulls in a few headers and macro
- *  definitions. This is a minimal fix for the generated selftest file in
- *  C++ mode.
- */
-#include <string.h>
-#define streq(s1,s2)    (!strcmp ((s1), (s2)))
-#endif
-
 typedef struct {
     const char *testname;           // test name, can be called from command line this way
     void (*test) (bool);            // function to run the test (or NULL for private tests)
@@ -52,6 +41,7 @@ static test_item_t
 all_tests [] = {
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 // Tests for draft public classes:
+    { "fty_common_mlm_subprocess", fty_common_mlm_subprocess_test, false, true, NULL },
     { "fty_common_mlm_tntmlm", fty_common_mlm_tntmlm_test, false, true, NULL },
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
     {NULL, NULL, 0, 0, NULL}          //  Sentinel
