@@ -222,7 +222,9 @@ output(
 int
 simple_output (const Argv& args, std::string& o, std::string& e);
 
-
 } //end namespace
+
+void
+fty_common_mlm_subprocess_test (bool verbose);
 #endif
 #endif

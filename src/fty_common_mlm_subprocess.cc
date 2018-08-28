@@ -36,7 +36,7 @@ namespace MlmSubprocess {
 // forward declaration of helper functions
 // TODO: move somewhere else
 
-// small internal structure to be passed to callbacks
+// small internal structure to be passed to MlmSubprocess::callbacks
 struct sbp_info_t {
     uint64_t timeout;
     uint64_t now;
@@ -45,14 +45,14 @@ struct sbp_info_t {
 };
 
 static int close_forget(int &fd);
-char * const * _mk_argv(const Argv& vec);
+char * const * _mk_argv(const MlmSubprocess::Argv& vec);
 void _free_argv(char * const * argv);
-std::size_t _argv_hash(Argv args);
+std::size_t _argv_hash(MlmSubprocess::Argv args);
 static int s_output(SubProcess& p, std::string& o, std::string& e, uint64_t timeout, size_t timestep);
 static int s_output2(SubProcess& p, std::string& o, uint64_t timeout, size_t timestep);
 
 
-SubProcess::SubProcess(Argv cxx_argv, int flags) :
+SubProcess::SubProcess(MlmSubprocess::Argv cxx_argv, int flags) :
     _fork(false),
     _state(SubProcessState::NOT_STARTED),
     _cxx_argv(cxx_argv),
@@ -279,23 +279,23 @@ std::string read_all(int fd) {
     return sbuf.str();
 }
 
-int call(const Argv& args) {
+int call(const MlmSubprocess::Argv& args) {
     SubProcess p(args);
     p.run();
     return p.wait();
 }
 
-int output(const Argv& args, std::string& o, std::string& e, uint64_t timeout, size_t timestep) {
+int output(const MlmSubprocess::Argv& args, std::string& o, std::string& e, uint64_t timeout, size_t timestep) {
     SubProcess p(args, SubProcess::STDOUT_PIPE | SubProcess::STDERR_PIPE);
     return s_output (p, o, e, timeout, timestep);
 }
 
-int output2(const Argv& args, std::string& o, uint64_t timeout, size_t timestep) {
+int output2(const MlmSubprocess::Argv& args, std::string& o, uint64_t timeout, size_t timestep) {
     SubProcess p(args, SubProcess::STDOUT_PIPE);
     return s_output2 (p, o, timeout, timestep);
 }
 
-int output(const Argv& args, std::string& o, std::string& e, const std::string& i, uint64_t timeout, size_t timestep) {
+int output(const MlmSubprocess::Argv& args, std::string& o, std::string& e, const std::string& i, uint64_t timeout, size_t timestep) {
     SubProcess p(args, SubProcess::STDOUT_PIPE | SubProcess::STDERR_PIPE| SubProcess::STDIN_PIPE);
     p.run();
     int r = ::write(p.getStdin(), i.c_str(), i.size());
@@ -359,7 +359,7 @@ static int close_forget(int &fd) {
     return res;
 }
 
-char * const * _mk_argv(const Argv& vec) {
+char * const * _mk_argv(const MlmSubprocess::Argv& vec) {
 
     char ** argv = (char **) malloc(sizeof(char*) * (vec.size()+1));
     assert(argv);
@@ -389,7 +389,7 @@ void _free_argv(char * const * argv) {
     free((void*)argv);
 }
 
-std::size_t _argv_hash(Argv args) {
+std::size_t _argv_hash(MlmSubprocess::Argv args) {
 
 
     std::hash<std::string> hash;
@@ -551,7 +551,7 @@ static int s_output2(SubProcess& p, std::string& o, uint64_t timeout, size_t tim
 //      positive return value of a process
 //      negative is a number of a signal which terminates process
 int
-simple_output (const Argv& args, std::string& o, std::string& e)
+simple_output (const MlmSubprocess::Argv& args, std::string& o, std::string& e)
 {
 
     static unsigned timeout = 5;
@@ -583,5 +583,404 @@ simple_output (const Argv& args, std::string& o, std::string& e)
     e.assign (err);
     return ret;
 }
-
 } // end namespace
+
+void
+fty_common_mlm_subprocess_test (bool verbose)
+{
+    //TEST_CASE("subprocess-wait-true", "[subprocess][wait]")
+    {
+    std::vector<std::string> argv{"/bin/true"};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+    assert(ret == 0);
+
+    //nothing on stdout
+    assert(proc.getStdout() == -2);
+
+    //nothing on stderr
+    assert(proc.getStderr() == -2);
+
+    //nothing on stdin
+    assert(proc.getStdin() == -2);
+    }
+
+    //TEST_CASE("subprocess-wait-false", "[subprocess][wait]")
+    {
+    std::vector<std::string> argv{"/bin/false"};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+    assert(ret == 1);
+    }
+
+    //TEST_CASE("subprocess-wait-sleep", "[subprocess][wait]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "3"};
+    int ret;
+    bool bret;
+    time_t start, stop;
+
+    MlmSubprocess::SubProcess proc(argv);
+    start = time(NULL);
+    assert(start != -1);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+    stop = time(NULL);
+    assert(stop != -1);
+    assert(ret == 0);
+    assert((stop - start) > 2);
+    }
+
+    //TEST_CASE("subprocess-read-stderr", "[subprocess][fd]")
+    {
+    std::vector<std::string> argv{"/usr/bin/printf"};
+    char buf[1023];
+    int ret;
+    ssize_t rv;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv, MlmSubprocess::SubProcess::STDERR_PIPE);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+
+    //something on stderr
+    memset((void*) buf, '\0', 1023);
+    rv = read(proc.getStderr(), (void*) buf, 1023);
+    assert(rv >= 0);
+    assert(rv == (ssize_t)strlen(buf));
+    assert(strlen(buf) > 42);
+
+    //nothing on stdout
+    assert(proc.getStdout() == -2);
+
+    //nothing on stdin
+    assert(proc.getStdin() == -2);
+
+    assert(ret == 1);
+    }
+
+    //TEST_CASE("subprocess-read-stdout", "[subprocess][fd]")
+    {
+    std::vector<std::string> argv{"/usr/bin/printf", "the-test\n"};
+    char buf[1023];
+    int ret;
+    ssize_t rv;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv, MlmSubprocess::SubProcess::STDOUT_PIPE);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+
+    //nothing on stderr
+    assert(proc.getStderr() == -2);
+
+    //nothing on stdin
+    assert(proc.getStdin() == -2);
+
+    //something on stdout
+    memset((void*) buf, '\0', 1023);
+    rv = read(proc.getStdout(), (void*) buf, 1023);
+    assert(rv >= 0);
+    assert(rv == (ssize_t)strlen(buf));
+    assert(strlen(buf) == 9);
+
+    assert(ret == 0);
+    }
+
+    //TEST_CASE("subprocess-write-stdin", "[subprocess][fd]")
+    {
+    std::vector<std::string> argv{"/bin/cat"};
+    const char ibuf[] = "hello, world";
+    char buf[1023];
+    int ret;
+    ssize_t rv;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv, MlmSubprocess::SubProcess::STDIN_PIPE | MlmSubprocess::SubProcess::STDOUT_PIPE);
+    bret = proc.run();
+    assert(bret);
+    // as we don't close stdin/stdout/stderr, new fd must be at least > 2
+    assert(proc.getStdin() > STDERR_FILENO);
+
+    rv = ::write(proc.getStdin(), (const void*) ibuf, strlen(ibuf));
+    assert(rv == strlen(ibuf));
+    ::close(proc.getStdin());   // end of stream
+
+    ret = proc.wait();
+
+    //nothing on stderr
+    assert(proc.getStderr() == -2);
+
+    //something on stdout
+    ::memset((void*) buf, '\0', 1023);
+    rv = ::read(proc.getStdout(), (void*) buf, strlen(ibuf));
+    assert(rv >= 0);
+    assert(rv == (ssize_t)strlen(buf));
+    assert(strlen(buf) == strlen(ibuf));
+    assert(strcmp(buf, ibuf) == 0);
+
+    assert(ret == 0);
+    }
+
+    //TEST_CASE("subprocess-output", "[subprocess][fd]")
+    {
+    MlmSubprocess::Argv argv{"/usr/bin/printf", "the-test\n"};
+    std::string o;
+    std::string e;
+
+    int r = MlmSubprocess::output(argv, o, e);
+    assert(r == 0);
+    assert(o == "the-test\n");
+    assert(e == "");
+
+    MlmSubprocess::Argv argv2{"/usr/bin/printf"};
+
+    r = MlmSubprocess::output(argv2, o, e);
+    assert(r == 1);
+    assert(o == "");
+    assert(e.size() > 0);
+    }
+
+    //TEST_CASE("subprocess-output3", "[subprocess][fd]")
+    {
+    MlmSubprocess::Argv argv{"/bin/cat", "-n"};
+    std::string o;
+    std::string e;
+
+    int r = MlmSubprocess::output(argv, o, e, "the test\n");
+    assert(r == 0);
+    assert(o == "     1\tthe test\n");
+    assert(e == "");
+
+    MlmSubprocess::Argv argv2{"/bin/cat", "-d"};
+
+    r = MlmSubprocess::output(argv2, o, e, "the test");
+    assert(r == 1);
+    assert(o == "");
+    assert(e.size() > 0);
+    }
+
+    //TEST_CASE("subprocess-MlmSubprocess::call", "[subprocess]")
+    {
+    int ret = MlmSubprocess::call({"/bin/false"});
+    assert(ret == 1);
+    ret = MlmSubprocess::call({"/bin/true"});
+    assert(ret == 0);
+    }
+
+    //TEST_CASE("subprocess-poll-sleep", "[subprocess][poll]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "3"};
+    int ret, i;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.getReturnCode();
+
+    for (i = 0; i != 600; i++) {
+        ret = proc.poll();
+        if (! proc.isRunning()) {
+            break;
+        }
+        sleep(1);
+    }
+    assert(i != 0);
+    assert(!proc.isRunning());
+    assert(ret == 0);
+    }
+
+    //TEST_CASE("subprocess-kill", "[subprocess][kill]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "300"};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    usleep(50);
+
+    ret = proc.kill();
+    assert(ret == 0);
+    for (auto i = 1u; i != 1000; i++) {
+        usleep(i*50);
+        proc.poll();
+        if (!proc.isRunning()) {
+            break;
+        }
+    }
+    // note that getReturnCode does not report anything unless poll is MlmSubprocess::called
+    proc.poll();
+    usleep(50);
+    ret = proc.getReturnCode();
+    zsys_debug ("ret = %d", ret);
+
+    assert(!proc.isRunning());
+    assert(ret == -15);
+    }
+
+    //TEST_CASE("subprocess-terminate", "[subprocess][kill]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "300"};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    usleep(50);
+
+    ret = proc.terminate();
+    assert(ret == 0);
+    usleep(50);
+    proc.poll();
+    // note that getReturnCode does not report anything unless poll is MlmSubprocess::called
+    ret = proc.getReturnCode();
+
+    assert(!proc.isRunning());
+    assert(ret == -9);
+    }
+
+    //TEST_CASE("subprocess-destructor", "[subprocess][wait]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "20"};
+    time_t start, stop;
+    bool bret;
+
+    start = time(NULL);
+    assert(start != -1);
+    {
+        MlmSubprocess::SubProcess proc(argv);
+        bret = proc.run();
+        assert(bret);
+    } // destructor MlmSubprocess::called here!
+    stop = time(NULL);
+    assert(stop != -1);
+    assert((stop - start) < 20);
+    }
+
+    //TEST_CASE("subprocess-external-kill", "[subprocess][wait]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "200"};
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+
+    kill(proc.getPid(), SIGTERM);
+    for (auto i = 1u; i != 1000; i++) {
+        usleep(i*50);
+        proc.poll();
+        if (!proc.isRunning()) {
+            break;
+        }
+    }
+    proc.poll();
+
+    for (auto i = 1u; i != 1000; i++) {
+        usleep(i*50);
+        proc.poll();
+        if (!proc.isRunning()) {
+            break;
+        }
+    }
+    int r = proc.getReturnCode();
+    //XXX: sometimes SIGHUP is delivered instead of SIGKILL - no time to investigate it
+    //     so let makes tests no failing in this case ...
+    assert((r == -15 || r == -1));
+    }
+
+    //TEST_CASE("subprocess-run-no-binary", "[subprocess][run]")
+    {
+    std::vector<std::string> argv{"/n/o/b/i/n/a/r/y",};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+    assert(ret != 0);
+    }
+
+    //TEST_CASE("subprocess-MlmSubprocess::call-no-binary", "[subprocess][run]")
+    {
+    std::vector<std::string> argv{"/n/o/b/i/n/a/r/y",};
+    int ret;
+
+    ret = MlmSubprocess::call(argv);
+    assert(ret != 0);
+    }
+
+    //TEST_CASE ("subprocess-test-timeout", "[subprocess][output]")
+    {
+    if (!zsys_file_exists ("/dev/full"))
+        return;
+
+    MlmSubprocess::Argv args {"/bin/cat", "/dev/full"};
+    auto start = zclock_mono ();
+    std::string o;
+    std::string e;
+    int r = MlmSubprocess::output (args, o, e, 4);
+    auto stop = zclock_mono ();
+
+    assert (r == -15);   //killed by SIGTERM
+    assert (o.empty ());
+    assert (e.empty());
+    assert ((stop - start) >= 4000); // it's hard to tell how long the delay was, but it must be at least 4 secs
+    }
+
+    //TEST_CASE ("subprocess-test-timeout2", "[subprocess][output]")
+    {
+    // We have a few choices for an indefinitely-running program
+    // "ping" may require permissions (setuid) that are not always there
+    // and e.g. for busybox applet we can not really set them for non-roots
+    //    MlmSubprocess::Argv args {"/bin/ping", "127.0.0.1"};
+    //    MlmSubprocess::Argv args {"/bin/cat", "/dev/urandom"};
+        MlmSubprocess::Argv args {"/usr/bin/yes", "T"};
+        auto start = zclock_mono ();
+        std::string o;
+        std::string e;
+        int r = MlmSubprocess::output (args, o, e, 4);
+        auto stop = zclock_mono ();
+
+        assert (r == -15);   //killed by SIGTERM
+        assert (!o.empty ());
+        assert (e.empty());
+        assert ((stop - start) >= 4000); // it's hard to tell how long the delay was, but it must be at least 4 secs
+    }
+
+    // test if s_ping_process really works
+    //TEST_CASE ("subprocess-test-timeout3", "[subprocess][output]")
+    {
+        MlmSubprocess::Argv args {"/bin/sleep", "2"};
+        auto start = zclock_mono ();
+        std::string o;
+        std::string e;
+        int r = MlmSubprocess::output (args, o, e, 5);
+        auto stop = zclock_mono ();
+
+        assert (r == 0);   //killed by SIGTERM
+        assert (o.empty ());
+        assert (e.empty());
+
+        auto delta = stop - start;
+        assert ((delta >= 2000 && delta < 5000)); // it's hard to tell how long the delay was, but it must be between 2 and 5 secs
+    }
+}
