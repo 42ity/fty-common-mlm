@@ -716,7 +716,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     assert(proc.getStdin() > STDERR_FILENO);
 
     rv = ::write(proc.getStdin(), (const void*) ibuf, strlen(ibuf));
-    assert(rv == strlen(ibuf));
+    assert(static_cast<size_t> (rv) == strlen(ibuf));
     ::close(proc.getStdin());   // end of stream
 
     ret = proc.wait();
