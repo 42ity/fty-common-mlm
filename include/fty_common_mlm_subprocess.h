@@ -126,6 +126,12 @@ class SubProcess {
         //  This calls wait() to ensure we are not creating zombies
         //
         //  @return \see kill
+        int hardkill();
+
+        //! \brief gracefully terminate the subprocess with SIGTERM/15,
+        //   check if died quickly, hardkill() otherwise
+        //
+        //  @return \see kill
         int terminate();
 
         const char* state() const;

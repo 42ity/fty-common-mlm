@@ -82,19 +82,8 @@ SubProcess::SubProcess(MlmSubprocess::Argv cxx_argv, int flags) :
 SubProcess::~SubProcess() {
     int _saved_errno = errno;
 
-    // update a state
-    poll();
-    // Graceful shutdown
-    if (isRunning())
-        kill(SIGTERM);
-    for (int i = 0; i<20 && isRunning(); i++) {
-        usleep(100);
-        poll(); // update a state after awhile
-    }
-    if (isRunning()) {
-        // wait is already inside terminate
-        terminate();
-    }
+    // poll, SIGTERM, wait, SIGKILL is already inside terminate
+    terminate();
 
     // close pipes
     close_forget(_inpair[0]);
@@ -239,9 +228,27 @@ int SubProcess::kill(int signal) {
     return ret;
 }
 
-int SubProcess::terminate() {
+int SubProcess::hardkill() {
     auto ret = kill(SIGKILL);
-    wait();
+    wait(); // avoid zombies
+    return ret;
+}
+
+int SubProcess::terminate() {
+    // update state
+    poll();
+
+    // Graceful shutdown
+    auto ret = kill(SIGTERM);
+
+    for (int i = 0; i<20 && isRunning(); i++) {
+        usleep(100);
+        poll(); // update state after a while
+    }
+    if (isRunning()) {
+        // wait is already in hardkill
+        ret = hardkill();
+    }
     return ret;
 }
 
@@ -488,7 +495,7 @@ static int s_output(SubProcess& p, std::string& o, std::string& e, uint64_t time
         r = p.poll ();
         if (p.isRunning ()) {
             zclock_sleep (2000);
-            p.terminate ();
+            p.hardkill ();
             r = p.poll ();
         }
     }
@@ -526,7 +533,7 @@ static int s_output2(SubProcess& p, std::string& o, uint64_t timeout, size_t tim
         r = p.poll ();
         if (p.isRunning ()) {
             zclock_sleep (2000);
-            p.terminate ();
+            p.hardkill ();
             r = p.poll ();
         }
     }
@@ -804,6 +811,36 @@ fty_common_mlm_subprocess_test (bool verbose)
     assert(ret == 0);
     }
 
+    //TEST_CASE("subprocess-hardkill", "[subprocess][hardkill]")
+    {
+    std::vector<std::string> argv{"/bin/sleep", "300"};
+    int ret;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv);
+    bret = proc.run();
+    assert(bret);
+    usleep(50000);
+
+    ret = proc.hardkill();
+    assert(ret == 0);
+    for (auto i = 1u; i != 1000; i++) {
+        usleep(i*50);
+        proc.poll();
+        if (!proc.isRunning()) {
+            break;
+        }
+    }
+    // note that getReturnCode does not report anything unless poll is MlmSubprocess::called
+    proc.poll();
+    usleep(50);
+    ret = proc.getReturnCode();
+    zsys_debug ("ret = %d", ret);
+
+    assert(!proc.isRunning());
+    assert(ret == -9);
+    }
+
     //TEST_CASE("subprocess-kill", "[subprocess][kill]")
     {
     std::vector<std::string> argv{"/bin/sleep", "300"};
@@ -815,6 +852,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     assert(bret);
     usleep(50000);
 
+    // default per header is SIGTERM if not specified by caller
     ret = proc.kill();
     assert(ret == 0);
     for (auto i = 1u; i != 1000; i++) {
@@ -834,7 +872,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     assert(ret == -15);
     }
 
-    //TEST_CASE("subprocess-terminate", "[subprocess][kill]")
+    //TEST_CASE("subprocess-terminate", "[subprocess][terminate]")
     {
     std::vector<std::string> argv{"/bin/sleep", "300"};
     int ret;
@@ -853,7 +891,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     ret = proc.getReturnCode();
 
     assert(!proc.isRunning());
-    assert(ret == -9);
+    assert(ret == -15);
     }
 
     //TEST_CASE("subprocess-destructor", "[subprocess][wait]")
