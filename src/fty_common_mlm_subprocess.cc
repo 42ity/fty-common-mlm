@@ -813,7 +813,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     MlmSubprocess::SubProcess proc(argv);
     bret = proc.run();
     assert(bret);
-    usleep(50);
+    usleep(50000);
 
     ret = proc.kill();
     assert(ret == 0);
@@ -843,7 +843,7 @@ fty_common_mlm_subprocess_test (bool verbose)
     MlmSubprocess::SubProcess proc(argv);
     bret = proc.run();
     assert(bret);
-    usleep(50);
+    usleep(50000);
 
     ret = proc.terminate();
     assert(ret == 0);
