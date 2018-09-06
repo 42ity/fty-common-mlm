@@ -26,6 +26,9 @@
 #include <map>
 #include <czmq.h>
 
+// malamute endpoint
+#define MLM_ENDPOINT    "ipc://@/malamute"
+
 namespace MlmUtils {
 
     // convert zhash_t to std::map
