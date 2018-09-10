@@ -34,7 +34,6 @@
 #include <malamute.h>
 #include <cxxtools/allocator.h>
 #include <fty_log.h>
-#include <openssl/sha.h>
 
 //  FTY_COMMON_MLM version macros for compile-time API detection
 #define FTY_COMMON_MLM_VERSION_MAJOR 1
