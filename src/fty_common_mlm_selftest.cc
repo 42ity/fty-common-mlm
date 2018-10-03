@@ -43,6 +43,7 @@ all_tests [] = {
 // Tests for draft public classes:
     { "fty_common_mlm_subprocess", fty_common_mlm_subprocess_test, false, true, NULL },
     { "fty_common_mlm_tntmlm", fty_common_mlm_tntmlm_test, false, true, NULL },
+    { "fty_common_mlm_utils", fty_common_mlm_utils_test, false, true, NULL },
 #endif // FTY_COMMON_MLM_BUILD_DRAFT_API
     {NULL, NULL, 0, 0, NULL}          //  Sentinel
 };
