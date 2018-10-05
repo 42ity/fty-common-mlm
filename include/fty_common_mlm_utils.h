@@ -41,5 +41,8 @@ namespace MlmUtils {
 
 } //namespace
 
+void
+fty_common_mlm_utils_test (bool verbose);
+
 #endif
 #endif //FTY_COMMON_MLM_UTILS_H_INCLUDED

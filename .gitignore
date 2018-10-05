@@ -72,12 +72,7 @@ install_manifest.txt
 Testing/
 
 # Repositories downloaded by CI integration scripts
-libsodium/
-libzmq/
-czmq/
-malamute/
-log4cplus/
-fty-common-logging/
+tmp-deps/
 
 # Travis build area
 tmp/
