@@ -75,14 +75,8 @@
 #   endif
 #endif
 
-//  Project has no stable classes, so we build the draft API
-#undef  FTY_COMMON_MLM_BUILD_DRAFT_API
-#define FTY_COMMON_MLM_BUILD_DRAFT_API
-
 //  Opaque class structures to allow forward references
 //  These classes are stable or legacy and built in all releases
-//  Draft classes are by default not built in stable releases
-#ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 typedef struct _fty_common_mlm_subprocess_t fty_common_mlm_subprocess_t;
 #define FTY_COMMON_MLM_SUBPROCESS_T_DEFINED
 typedef struct _fty_common_mlm_uuid_t fty_common_mlm_uuid_t;
@@ -91,17 +85,14 @@ typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
 #define FTY_COMMON_MLM_TNTMLM_T_DEFINED
 typedef struct _fty_common_mlm_utils_t fty_common_mlm_utils_t;
 #define FTY_COMMON_MLM_UTILS_T_DEFINED
-#endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 
 //  Public classes, each with its own header file
 #include "fty_common_mlm_guards.h"
-#ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 #include "fty_common_mlm_subprocess.h"
 #include "fty_common_mlm_uuid.h"
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
-#endif // FTY_COMMON_MLM_BUILD_DRAFT_API
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 

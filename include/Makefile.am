@@ -5,16 +5,12 @@
 nobase_include_HEADERS = \
     fty_common_mlm.h \
     fty_common_mlm_guards.h \
-    fty_common_mlm_library.h
-
-if ENABLE_DRAFTS
-nobase_include_HEADERS += \
     fty_common_mlm_subprocess.h \
     fty_common_mlm_uuid.h \
     fty_common_mlm_tntmlm.h \
-    fty_common_mlm_utils.h
+    fty_common_mlm_utils.h \
+    fty_common_mlm_library.h
 
-endif
 
 
 ################################################################################
