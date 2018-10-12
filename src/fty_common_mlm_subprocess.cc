@@ -73,6 +73,9 @@ SubProcess::SubProcess(MlmSubprocess::Argv cxx_argv, int flags) :
     if ((flags & SubProcess::STDERR_PIPE) != 0) {
         stderr_flag = PIPE_DEFAULT;
     }
+    if ((flags & SubProcess::STDERR_TO_STDOUT_PIPE) != 0) {
+        stderr_flag = PIPE_TO_STDOUT;
+    }
 
     _inpair[0]  = stdin_flag;  _inpair[1]  = stdin_flag;
     _outpair[0] = stdout_flag; _outpair[1] = stdout_flag;
@@ -122,33 +125,36 @@ bool SubProcess::run() {
     }
 
     // create pipes
-    if (_inpair[0] != PIPE_DISABLED && ::pipe(_inpair) == -1) {
+    if (_inpair[0] == PIPE_DEFAULT && ::pipe(_inpair) == -1) {
         return false;
     }
-    if (_outpair[0] != PIPE_DISABLED && ::pipe(_outpair) == -1) {
+    if (_outpair[0] == PIPE_DEFAULT && ::pipe(_outpair) == -1) {
         return false;
     }
-    if (_errpair[0] != PIPE_DISABLED && ::pipe(_errpair) == -1) {
+    if (_errpair[0] == PIPE_DEFAULT && ::pipe(_errpair) == -1) {
         return false;
     }
 
     _fork.fork();
     if (_fork.child()) {
 
-        if (_inpair[0] != PIPE_DISABLED) {
+        if (_inpair[0] >= 0) {
             int o_flags = fcntl(_inpair[0], F_GETFL);
             int n_flags = o_flags & (~O_NONBLOCK);
             fcntl(_inpair[0], F_SETFL, n_flags);
             ::dup2(_inpair[0], STDIN_FILENO);
             close_forget(_inpair[1]);
         }
-        if (_outpair[0] != PIPE_DISABLED) {
+        if (_outpair[0] >= 0) {
             close_forget(_outpair[0]);
             ::dup2(_outpair[1], STDOUT_FILENO);
         }
-        if (_errpair[0] != PIPE_DISABLED) {
+        if (_errpair[0] >= 0) {
             close_forget(_errpair[0]);
             ::dup2(_errpair[1], STDERR_FILENO);
+        }
+        else if (_errpair[0] == PIPE_TO_STDOUT && _outpair[1] >= 0) {
+            ::dup2(_outpair[1], STDERR_FILENO);
         }
 
         auto argv = _mk_argv(_cxx_argv);
@@ -676,6 +682,35 @@ fty_common_mlm_subprocess_test (bool verbose)
     assert(proc.getStdin() == -2);
 
     assert(ret == 1);
+    }
+
+    //TEST_CASE("subprocess-read-stderr-to-stdout", "[subprocess][fd]")
+    {
+    std::vector<std::string> argv{"/bin/sh", "-c", "echo stdout; (2>&1 echo stderr)"};
+    char buf[1023];
+    int ret;
+    ssize_t rv;
+    bool bret;
+
+    MlmSubprocess::SubProcess proc(argv, MlmSubprocess::SubProcess::STDOUT_PIPE | MlmSubprocess::SubProcess::STDERR_TO_STDOUT_PIPE);
+    bret = proc.run();
+    assert(bret);
+    ret = proc.wait();
+
+    //something on stderr
+    memset((void*) buf, '\0', 1023);
+    rv = read(proc.getStdout(), (void*) buf, 1023);
+    assert(rv >= 0);
+    assert(rv == (ssize_t)strlen(buf));
+    assert(streq(buf, "stdout\nstderr\n"));
+
+    //nothing on stderr
+    assert(proc.getStderr() == MlmSubprocess::SubProcess::PIPE_TO_STDOUT);
+
+    //nothing on stdin
+    assert(proc.getStdin() == MlmSubprocess::SubProcess::PIPE_DISABLED);
+
+    assert(ret == 0);
     }
 
     //TEST_CASE("subprocess-read-stdout", "[subprocess][fd]")
