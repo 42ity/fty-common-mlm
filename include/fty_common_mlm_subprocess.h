@@ -46,9 +46,11 @@ class SubProcess {
         static const int STDIN_PIPE=0x01;
         static const int STDOUT_PIPE=0x02;
         static const int STDERR_PIPE=0x04;
+        static const int STDERR_TO_STDOUT_PIPE=0x08;
 
         static const int PIPE_DEFAULT = -1;
         static const int PIPE_DISABLED = -2;
+        static const int PIPE_TO_STDOUT = -3;
 
         // \brief construct instance
         //
