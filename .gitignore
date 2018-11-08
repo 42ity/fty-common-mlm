@@ -3,7 +3,6 @@
 ### Note: Customized after generation; take care upon regens
 
 save.xml
-
 # Object files
 *.o
 *.so
