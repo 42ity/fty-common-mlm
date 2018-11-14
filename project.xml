@@ -18,6 +18,7 @@
         <option name = "clangformat_allow_failures" value = "1" />
         <option name = "use_pkg_deps_prereqs_source" value = "0" />
         <option name = "test_memcheck" value = "0" />
+        <option name = "require_gitignore" value = "1" />
     </target>
     <target name = "jenkins" >
         <option name = "agent_label" value = "devel-image &amp;&amp; x86_64" />
@@ -26,6 +27,11 @@
         <option name = "build_docs" value = "1" />
         <option name = "dist_docs" value = "1" />
         <option name = "test_memcheck" value = "0" />
+
+        <!-- Try to avoid avalanche rebuilds of same code on our CI -->
+        <option name = "use_earlymilestone" value = "1" />
+        <option name = "use_build_nonconcurrent" value = "1" />
+        <option name = "use_checkout_explicit" value = "1" />
     </target>
 
     <include filename = "license.xml" />
