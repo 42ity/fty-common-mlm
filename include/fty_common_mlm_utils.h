@@ -41,6 +41,11 @@ namespace MlmUtils {
 
 } //namespace
 
+/** \brief do a memory clean zmsg_popstr call
+ *   \return a std::string object
+ */
+std::string zmsg_popstring(zmsg_t *resp);
+
 void
 fty_common_mlm_utils_test (bool verbose);
 
