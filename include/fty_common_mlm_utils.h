@@ -39,12 +39,12 @@ namespace MlmUtils {
     zhash_t *
     map_to_zhash (std::map<std::string, std::string> map_to_convert);
 
-} //namespace
+    /** \brief do a memory clean zmsg_popstr call
+     *   \return a std::string object
+     */
+    std::string zmsg_popstring(zmsg_t *resp);
 
-/** \brief do a memory clean zmsg_popstr call
- *   \return a std::string object
- */
-std::string zmsg_popstring(zmsg_t *resp);
+} //namespace
 
 void
 fty_common_mlm_utils_test (bool verbose);
