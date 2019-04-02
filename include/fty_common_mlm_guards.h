@@ -63,5 +63,6 @@ typedef MlmObjGuard<zpoller_t, zpoller_destroy> ZpollerGuard;
 typedef MlmObjGuard<zmsg_t, zmsg_destroy> ZmsgGuard;
 typedef MlmObjGuard<zuuid_t, zuuid_destroy> ZuuidGuard;
 typedef MlmObjGuard<char, zstr_free> ZstrGuard;
+typedef MlmObjGuard<zconfig_t, zconfig_destroy> ZconfigGuard;
 
 #endif
