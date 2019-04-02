@@ -1,7 +1,7 @@
 /*  =========================================================================
-    fty_common_mlm_utils - class description
+    fty_common_mlm_utils - common malamute utils 
 
-    Copyright (C) 2014 - 2018 Eaton
+    Copyright (C) 2014 - 2019 Eaton
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -200,3 +200,12 @@ fty_common_mlm_utils_test (bool verbose)
 
     printf ("fty-common-mlm-utils OK\n");
 }
+
+std::string zmsg_popstring(zmsg_t *resp){
+    char *popstr = zmsg_popstr (resp);
+    //copies the null-terminated character sequence (C-string) pointed by popstr
+    std::string string_rv = popstr;
+    zstr_free (&popstr);
+    return string_rv;
+}
+
