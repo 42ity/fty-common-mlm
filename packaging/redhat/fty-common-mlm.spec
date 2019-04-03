@@ -49,8 +49,8 @@ BuildRequires:  xmlto
 BuildRequires:  gcc-c++
 BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
-BuildRequires:  czmq-devel
-BuildRequires:  malamute-devel
+BuildRequires:  czmq-devel >= 3.0.2
+BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  cxxtools-devel
 BuildRequires:  log4cplus-devel
 BuildRequires:  fty-common-logging-devel
@@ -81,8 +81,8 @@ Group:          System/Libraries
 Requires:       libfty_common_mlm1 = %{version}
 Requires:       libsodium-devel
 Requires:       zeromq-devel
-Requires:       czmq-devel
-Requires:       malamute-devel
+Requires:       czmq-devel >= 3.0.2
+Requires:       malamute-devel >= 1.0.0
 Requires:       cxxtools-devel
 Requires:       log4cplus-devel
 Requires:       fty-common-logging-devel
