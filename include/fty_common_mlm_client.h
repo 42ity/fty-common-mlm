@@ -63,13 +63,12 @@ namespace mlm
          * \param pipe Pipe of the zactor_t
          * \param endpoint Endpoint to connect to
          * \param address Name of the established connection
-         * \param pollerTimeout Timeout of poller and rough interval betwenn tick() invocations (-1 to disable)
+         * \param pollerTimeout Timeout of poller and rough interval between tick() invocations (-1 to disable)
          * \param connectionTimeout Timeout for connection attempt
          */
-        MlmClient(zsock_t *pipe, const char *endpoint = NULL, const char *address = NULL, int pollerTimeout = -1, int connectionTimeout = 5000);
+        MlmClient(zsock_t *pipe, const char *endpoint = nullptr, const char *address = nullptr, int pollerTimeout = -1, int connectionTimeout = 5000);
         /**
          * \brief connect to broker malamute
-         * \return false to stop the agent, true otherwise.
          * \param endpoint Endpoint to connect to
          * \param address Name of the established connection
          * \param connectionTimeout Timeout for connection attempt
@@ -85,25 +84,25 @@ namespace mlm
          * \brief Callback for stream messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleStream(zmsg_t *message) { return true; }
+        virtual bool handleStream(const zmsg_t *message) { return true; }
 
         /**
          * \brief Callback for pipe messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handlePipe(zmsg_t *message);
+        virtual bool handlePipe(const zmsg_t *message);
 
         /**
          * \brief Callback for mailbox messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleMailbox(zmsg_t *message) { return true; }
+        virtual bool handleMailbox(const zmsg_t *message) { return true; }
 
         /**
          * \brief Callback for "other" messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleOther(zmsg_t *message, void *which) { return true; }
+        virtual bool handleOther(const zmsg_t *message, void *which) { return true; }
 
         /**
          * \brief Create/get the zpoller_t* object for the agent mainloop.
@@ -111,13 +110,24 @@ namespace mlm
          */
         virtual zpoller_t* zpoller();
 
+        /**
+         * \brief Getter for mlm_client_t
+         * \return mlm_client_t
+         */
+        mlm_client_t * client() { return m_client; }
+
+        /**
+         * \brief Getter for zsock_t
+         * \return zsock_t
+         */
+        zsock_t * pipe() { return m_pipe; }
+
+
+    private:
         mlm_client_t *m_client;
         zsock_t *m_pipe;
         int64_t m_lastTick;
         int m_pollerTimeout;
-        int m_connectionTimeout;
-
-    private:
         zpoller_t *m_defaultZpoller;
     };
     

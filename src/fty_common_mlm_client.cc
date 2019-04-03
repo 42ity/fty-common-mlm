@@ -41,7 +41,6 @@ namespace mlm
         m_pipe(pipe),
         m_lastTick(zclock_mono()),
         m_pollerTimeout(pollerTimeout),
-        m_connectionTimeout(connectionTimeout),
         m_defaultZpoller(nullptr)
     {
         
@@ -62,7 +61,6 @@ namespace mlm
                     endpoint, connectionTimeout, address);
             throw std::runtime_error("Can't connect client");
         }
-        m_connectionTimeout=connectionTimeout;
     }
 
 
@@ -87,6 +85,10 @@ namespace mlm
 
             if (which == m_pipe) {
                 ZmsgGuard message(zmsg_recv(m_pipe));
+                if (message == nullptr) {
+                    log_debug("interrupted");
+                    break;
+                }
                 if (!handlePipe(message.get())) {
                     break;
                 }
@@ -114,6 +116,10 @@ namespace mlm
             }
             else {
                 ZmsgGuard message(zmsg_recv(which));
+                if (message == nullptr) {
+                    log_debug("interrupted");
+                    break;
+                }
                 if (!handleOther(message.get(), which)) {
                     break;
                 }
@@ -121,7 +127,7 @@ namespace mlm
         }
     }
 
-    bool MlmClient::handlePipe(zmsg_t *message)
+    bool MlmClient::handlePipe(const zmsg_t *message)
     {
         ZstrGuard actor_command(zmsg_popstr(message));
 
