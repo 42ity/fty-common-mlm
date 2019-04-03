@@ -84,25 +84,25 @@ namespace mlm
          * \brief Callback for stream messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleStream(const zmsg_t *message) { return true; }
+        virtual bool handleStream(zmsg_t *message) { return true; }
 
         /**
          * \brief Callback for pipe messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handlePipe(const zmsg_t *message);
+        virtual bool handlePipe(zmsg_t *message);
 
         /**
          * \brief Callback for mailbox messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleMailbox(const zmsg_t *message) { return true; }
+        virtual bool handleMailbox(zmsg_t *message) { return true; }
 
         /**
          * \brief Callback for "other" messages. The callback DOESN'T take ownership of the message.
          * \return false to stop the agent, true otherwise.
          */
-        virtual bool handleOther(const zmsg_t *message, void *which) { return true; }
+        virtual bool handleOther(zmsg_t *message, void *which) { return true; }
 
         /**
          * \brief Create/get the zpoller_t* object for the agent mainloop.

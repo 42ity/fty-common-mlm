@@ -127,7 +127,7 @@ namespace mlm
         }
     }
 
-    bool MlmClient::handlePipe(const zmsg_t *message)
+    bool MlmClient::handlePipe(zmsg_t *message)
     {
         ZstrGuard actor_command(zmsg_popstr(message));
 
