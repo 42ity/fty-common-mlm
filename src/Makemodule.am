@@ -14,6 +14,7 @@ pkgconfig_DATA = src/libfty_common_mlm.pc
 
 src_libfty_common_mlm_la_SOURCES = \
     src/fty_common_mlm_subprocess.cc \
+    src/fty_common_mlm_client.cc \
     src/fty_common_mlm_uuid.cc \
     src/fty_common_mlm_tntmlm.cc \
     src/fty_common_mlm_utils.cc \
@@ -194,6 +195,16 @@ else
 coverage: src/fty_common_mlm_selftest
 	@echo "call make clean && configure --with-gcov to enable code coverage"
 	@exit 1
+endif
+
+bindings: python-bindings
+
+python-bindings:
+if ENABLE_BINDINGS_PYTHON
+	-( cd bindings/python && python setup.py install )
+else
+	@echo "Python Bindings not enabled or missing setup.py... skipping"
+
 endif
 
 # A series of tests that the codebase and recipes are pretty, easy
