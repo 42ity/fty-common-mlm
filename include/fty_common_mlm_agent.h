@@ -1,5 +1,5 @@
 /*  =========================================================================
-    fty_common_mlm_client - C++ class to help with malamute
+    fty_common_mlm_client - Helper C++ class to build a malamute agent (server)
 
     Copyright (C) 2014 - 2018 Eaton
 

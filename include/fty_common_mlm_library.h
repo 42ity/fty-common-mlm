@@ -79,8 +79,8 @@
 //  These classes are stable or legacy and built in all releases
 typedef struct _fty_common_mlm_subprocess_t fty_common_mlm_subprocess_t;
 #define FTY_COMMON_MLM_SUBPROCESS_T_DEFINED
-typedef struct _fty_common_mlm_client_t fty_common_mlm_client_t;
-#define FTY_COMMON_MLM_CLIENT_T_DEFINED
+typedef struct _fty_common_mlm_agent_t fty_common_mlm_agent_t;
+#define FTY_COMMON_MLM_AGENT_T_DEFINED
 typedef struct _fty_common_mlm_uuid_t fty_common_mlm_uuid_t;
 #define FTY_COMMON_MLM_UUID_T_DEFINED
 typedef struct _fty_common_mlm_tntmlm_t fty_common_mlm_tntmlm_t;
@@ -92,7 +92,7 @@ typedef struct _fty_common_mlm_utils_t fty_common_mlm_utils_t;
 //  Public classes, each with its own header file
 #include "fty_common_mlm_guards.h"
 #include "fty_common_mlm_subprocess.h"
-#include "fty_common_mlm_client.h"
+#include "fty_common_mlm_agent.h"
 #include "fty_common_mlm_uuid.h"
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
