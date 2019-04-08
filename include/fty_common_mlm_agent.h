@@ -1,7 +1,7 @@
 /*  =========================================================================
-    fty_common_mlm_client - Helper C++ class to build a malamute agent (server)
+    fty_common_mlm_agent - Helper C++ class to build a malamute agent (server)
 
-    Copyright (C) 2014 - 2018 Eaton
+    Copyright (C) 2014 - 2019 Eaton
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_CLIENT_H_INCLUDED
-#define FTY_COMMON_MLM_CLIENT_H_INCLUDED
+#ifndef FTY_COMMON_MLM_AGENT_H_INCLUDED
+#define FTY_COMMON_MLM_AGENT_H_INCLUDED
 
 #include <exception>
 
