@@ -30,13 +30,13 @@
 
 namespace mlm
 {
-    MlmClient::~MlmClient()
+    MlmAgent::~MlmAgent()
     {
         mlm_client_destroy(&m_client);
         zpoller_destroy(&m_defaultZpoller);
     }
 
-    MlmClient::MlmClient(zsock_t *pipe, const char *endpoint, const char *address, int pollerTimeout, int connectionTimeout)
+    MlmAgent::MlmAgent(zsock_t *pipe, const char *endpoint, const char *address, int pollerTimeout, int connectionTimeout)
         : m_client(mlm_client_new()),
         m_pipe(pipe),
         m_lastTick(zclock_mono()),
@@ -53,7 +53,7 @@ namespace mlm
         }
     }
 
-    void MlmClient::connect(const char *endpoint, const char *address, int connectionTimeout)
+    void MlmAgent::connect(const char *endpoint, const char *address, int connectionTimeout)
     {
         log_debug("endpoint: %s", endpoint);
         if (mlm_client_connect(m_client, endpoint, connectionTimeout, address) == -1) {
@@ -64,7 +64,7 @@ namespace mlm
     }
 
 
-    void MlmClient::mainloop()
+    void MlmAgent::mainloop()
     {
         zsock_signal(m_pipe, 0);
         log_debug("actor ready");
@@ -127,7 +127,7 @@ namespace mlm
         }
     }
 
-    bool MlmClient::handlePipe(zmsg_t *message)
+    bool MlmAgent::handlePipe(zmsg_t *message)
     {
         ZstrGuard actor_command(zmsg_popstr(message));
 
@@ -139,7 +139,7 @@ namespace mlm
         return true;
     }
 
-    zpoller_t* MlmClient::zpoller(void)
+    zpoller_t* MlmAgent::zpoller(void)
     {
         if (!m_defaultZpoller) {
             m_defaultZpoller = zpoller_new(m_pipe, mlm_client_msgpipe(m_client), nullptr);
