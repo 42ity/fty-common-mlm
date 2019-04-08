@@ -1,5 +1,5 @@
 /*  =========================================================================
-    fty_common_mlm_tntmlm - class description
+    fty_common_mlm_tntmlm - malamute client to help MAILBOX REQUEST/REPLY with a backend Agent
 
     Copyright (C) 2014 - 2018 Eaton
 

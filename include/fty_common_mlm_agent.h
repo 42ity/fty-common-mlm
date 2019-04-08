@@ -1,7 +1,7 @@
 /*  =========================================================================
-    fty_common_mlm_client - C++ class to help with malamute
+    fty_common_mlm_agent - Helper C++ class to build a malamute agent (server)
 
-    Copyright (C) 2014 - 2018 Eaton
+    Copyright (C) 2014 - 2019 Eaton
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_CLIENT_H_INCLUDED
-#define FTY_COMMON_MLM_CLIENT_H_INCLUDED
+#ifndef FTY_COMMON_MLM_AGENT_H_INCLUDED
+#define FTY_COMMON_MLM_AGENT_H_INCLUDED
 
 #include <exception>
 
@@ -33,7 +33,7 @@ namespace mlm
      * to malamute, dispatching zmsg_t messages, periodic callbacks...). Users are
      * expected to subclass this class and fill in the agent logic.
      */
-    class MlmClient
+    class MlmAgent
     {
     public:
         /**
@@ -41,7 +41,7 @@ namespace mlm
          *
          * This will destroy the mlm_client_t object.
          */
-        virtual ~MlmClient();
+        virtual ~MlmAgent();
 
         /**
          * \brief Mainloop of the client.
@@ -66,7 +66,7 @@ namespace mlm
          * \param pollerTimeout Timeout of poller and rough interval between tick() invocations (-1 to disable)
          * \param connectionTimeout Timeout for connection attempt
          */
-        MlmClient(zsock_t *pipe, const char *endpoint = nullptr, const char *address = nullptr, int pollerTimeout = -1, int connectionTimeout = 5000);
+        MlmAgent(zsock_t *pipe, const char *endpoint = nullptr, const char *address = nullptr, int pollerTimeout = -1, int connectionTimeout = 5000);
         /**
          * \brief connect to broker malamute
          * \param endpoint Endpoint to connect to
