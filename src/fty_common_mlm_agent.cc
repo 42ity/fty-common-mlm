@@ -114,7 +114,7 @@ namespace mlm
                             mlm_client_command(m_client), mlm_client_subject(m_client), mlm_client_sender(m_client));
                 }
             }
-            else {
+            else if (which != nullptr) {
                 ZmsgGuard message(zmsg_recv(which));
                 if (message == nullptr) {
                     log_debug("interrupted");
