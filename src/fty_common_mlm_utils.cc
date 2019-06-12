@@ -30,6 +30,8 @@
 #include <cxxtools/jsondeserializer.h>
 #include <fty_common_utf8.h>
 
+namespace MlmUtils {
+
 std::map<std::string, std::string>
 zhash_to_map(zhash_t *hash)
 {
@@ -55,6 +57,8 @@ map_to_zhash (std::map<std::string, std::string> map_to_convert)
 
     return hash;
 }
+
+} //namespace
 
 void
 fty_common_mlm_utils_test (bool verbose)
