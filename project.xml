@@ -117,5 +117,6 @@
     <class name = "fty_common_mlm_uuid" selftest = "0" stable = "1" />
     <class name = "fty_common_mlm_tntmlm" stable = "1">malamute client to help MAILBOX REQUEST/REPLY with a backend Agent</class>
     <class name = "fty_common_mlm_utils"  selftest = "1" stable = "1" />
+    <class name = "fty_common_mlm_zconfig" selftest = "1" stable = "1" >C++ Wrapper Class fro zconfig</class>
 
 </project>
