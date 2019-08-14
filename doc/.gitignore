@@ -21,6 +21,8 @@ fty_common_mlm_tntmlm.txt
 fty_common_mlm_tntmlm.doc
 fty_common_mlm_utils.txt
 fty_common_mlm_utils.doc
+fty_common_mlm_zconfig.txt
+fty_common_mlm_zconfig.doc
 
 # Make sure to track the manually maintained project description
 !*.adoc
