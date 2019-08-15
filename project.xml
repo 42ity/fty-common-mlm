@@ -121,5 +121,8 @@
     
     <!-- Note: Helper implementing fty::SyncClient -->
     <class name = "fty-common-mlm-sync-client" selftest = "1" stable = "1">Simple malamute client for syncronous request</class>
+    
+    <!-- Note: Helper implementing fty::StreamSubscriber and fty::StreamPublisher -->
+    <class name = "fty-common-mlm-stream-client" selftest = "1" stable = "1">Simple malamute client for stream</class>
 
 </project>

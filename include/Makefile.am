@@ -12,6 +12,7 @@ nobase_include_HEADERS = \
     fty_common_mlm_utils.h \
     fty_common_mlm_zconfig.h \
     fty-common-mlm-sync-client.h \
+    fty-common-mlm-stream-client.h \
     fty_common_mlm_library.h
 
 
