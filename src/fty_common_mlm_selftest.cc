@@ -44,6 +44,8 @@ all_tests [] = {
     { "fty_common_mlm_tntmlm", fty_common_mlm_tntmlm_test, true, true, NULL },
     { "fty_common_mlm_utils", fty_common_mlm_utils_test, true, true, NULL },
     { "fty_common_mlm_zconfig", fty_common_mlm_zconfig_test, true, true, NULL },
+    { "fty_common_mlm_sync_client", fty_common_mlm_sync_client_test, true, true, NULL },
+    { "fty_common_mlm_stream_client", fty_common_mlm_stream_client_test, true, true, NULL },
     {NULL, NULL, 0, 0, NULL}          //  Sentinel
 };
 
