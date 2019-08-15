@@ -23,6 +23,8 @@ fty_common_mlm_utils.txt
 fty_common_mlm_utils.doc
 fty_common_mlm_zconfig.txt
 fty_common_mlm_zconfig.doc
+fty_common_mlm_sync_client.txt
+fty_common_mlm_sync_client.doc
 
 # Make sure to track the manually maintained project description
 !*.adoc

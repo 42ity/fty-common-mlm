@@ -89,6 +89,8 @@ typedef struct _fty_common_mlm_utils_t fty_common_mlm_utils_t;
 #define FTY_COMMON_MLM_UTILS_T_DEFINED
 typedef struct _fty_common_mlm_zconfig_t fty_common_mlm_zconfig_t;
 #define FTY_COMMON_MLM_ZCONFIG_T_DEFINED
+typedef struct _fty_common_mlm_sync_client_t fty_common_mlm_sync_client_t;
+#define FTY_COMMON_MLM_SYNC_CLIENT_T_DEFINED
 
 
 //  Public classes, each with its own header file
@@ -99,6 +101,7 @@ typedef struct _fty_common_mlm_zconfig_t fty_common_mlm_zconfig_t;
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
 #include "fty_common_mlm_zconfig.h"
+#include "fty-common-mlm-sync-client.h"
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 

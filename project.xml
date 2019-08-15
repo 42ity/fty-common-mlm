@@ -118,5 +118,8 @@
     <class name = "fty_common_mlm_tntmlm" stable = "1">malamute client to help MAILBOX REQUEST/REPLY with a backend Agent</class>
     <class name = "fty_common_mlm_utils"  selftest = "1" stable = "1" />
     <class name = "fty_common_mlm_zconfig" selftest = "1" stable = "1" >C++ Wrapper Class fro zconfig</class>
+    
+    <!-- Note: Helper implementing fty::SyncClient -->
+    <class name = "fty-common-mlm-sync-client" selftest = "1" stable = "1">Simple malamute client for syncronous request</class>
 
 </project>
