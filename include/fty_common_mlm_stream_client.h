@@ -91,5 +91,4 @@ namespace mlm
 FTY_COMMON_MLM_EXPORT void
     fty_common_mlm_stream_client_test (bool verbose);
 
-
 #endif

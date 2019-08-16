@@ -89,12 +89,12 @@ fty_common_mlm_zconfig.txt: $(top_srcdir)/src/fty_common_mlm_zconfig.cc
 	"$(srcdir)/mkman" "fty_common_mlm_zconfig" "$(builddir)/fty_common_mlm_zconfig.txt" "$(srcdir)/.."
 
 GENERATED_DOCS += fty_common_mlm_sync_client.txt fty_common_mlm_sync_client.doc
-fty_common_mlm_sync_client.txt: $(top_srcdir)/src/fty-common-mlm-sync-client.cc
-	"$(srcdir)/mkman" "fty-common-mlm-sync-client" "$(builddir)/fty_common_mlm_sync_client.txt" "$(srcdir)/.."
+fty_common_mlm_sync_client.txt: $(top_srcdir)/src/fty_common_mlm_sync_client.cc
+	"$(srcdir)/mkman" "fty_common_mlm_sync_client" "$(builddir)/fty_common_mlm_sync_client.txt" "$(srcdir)/.."
 
 GENERATED_DOCS += fty_common_mlm_stream_client.txt fty_common_mlm_stream_client.doc
-fty_common_mlm_stream_client.txt: $(top_srcdir)/src/fty-common-mlm-stream-client.cc
-	"$(srcdir)/mkman" "fty-common-mlm-stream-client" "$(builddir)/fty_common_mlm_stream_client.txt" "$(srcdir)/.."
+fty_common_mlm_stream_client.txt: $(top_srcdir)/src/fty_common_mlm_stream_client.cc
+	"$(srcdir)/mkman" "fty_common_mlm_stream_client" "$(builddir)/fty_common_mlm_stream_client.txt" "$(srcdir)/.."
 
 ### Note: for mains, we keep the source name rather than flattened name:c
 ### so that the manpages for binary programs match their name, at expense

@@ -1,5 +1,5 @@
 /*  =========================================================================
-    fty_common_mlm_sync_client - Simple malamute client for syncronous request
+    fty_common_mlm_sync_client - Simple malamute client for synchronous request
 
     Copyright (C) 2014 - 2019 Eaton
 
@@ -21,7 +21,7 @@
 
 /*
 @header
-    fty_common_mlm_sync_client - Simple malamute client for syncronous request
+    fty_common_mlm_sync_client - Simple malamute client for synchronous request
 @discuss
 @end
 */
