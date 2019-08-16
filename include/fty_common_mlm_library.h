@@ -103,8 +103,8 @@ typedef struct _fty_common_mlm_stream_client_t fty_common_mlm_stream_client_t;
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
 #include "fty_common_mlm_zconfig.h"
-#include "fty-common-mlm-sync-client.h"
-#include "fty-common-mlm-stream-client.h"
+#include "fty_common_mlm_sync_client.h"
+#include "fty_common_mlm_stream_client.h"
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 

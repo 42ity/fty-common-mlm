@@ -120,9 +120,9 @@
     <class name = "fty_common_mlm_zconfig" selftest = "1" stable = "1" >C++ Wrapper Class fro zconfig</class>
     
     <!-- Note: Helper implementing fty::SyncClient -->
-    <class name = "fty-common-mlm-sync-client" selftest = "1" stable = "1">Simple malamute client for syncronous request</class>
+    <class name = "fty_common_mlm_sync_client" selftest = "1" stable = "1">Simple malamute client for synchronous request</class>
     
     <!-- Note: Helper implementing fty::StreamSubscriber and fty::StreamPublisher -->
-    <class name = "fty-common-mlm-stream-client" selftest = "1" stable = "1">Simple malamute client for stream</class>
+    <class name = "fty_common_mlm_stream_client" selftest = "1" stable = "1">Simple malamute client for stream</class>
 
 </project>
