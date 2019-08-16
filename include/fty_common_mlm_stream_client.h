@@ -88,7 +88,7 @@ namespace mlm
 } //namespace mlm
 
 //  Self test of this class
-FTY_COMMON_MLM_EXPORT void
+void
     fty_common_mlm_stream_client_test (bool verbose);
 
 #endif
