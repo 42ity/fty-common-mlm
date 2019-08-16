@@ -22,6 +22,7 @@ make check # to run self-test
 * fty\_common\_mlm\_tntmlm.h
 * fty\_common\_mlm\_utils.h
 * fty\_common\_mlm\_uuid.h
+* fty\_common\_mlm\_sync\_client.h
 
 ## How to compile and test projects using fty-common-mlm by 42ITy standards
 
