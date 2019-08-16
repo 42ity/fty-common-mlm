@@ -61,7 +61,7 @@ namespace mlm
     MlmStreamClient::~MlmStreamClient()
     {
         //stop the thread
-        if(m_callbacks.empty())
+        if(!m_callbacks.empty())
         {
             m_stopRequested = true;
             publishOnBus("SYNC",{});
