@@ -178,6 +178,7 @@ namespace mlm
     void MlmStreamClient::listener()
     {
         mlm_client_t *client = mlm_client_new ();
+        
         try
         {
             if(client == NULL)
@@ -215,7 +216,7 @@ namespace mlm
                 void *which = zpoller_wait (poller, -1);
                 if (which == mlm_client_msgpipe (client))
                 {
-                 ZmsgGuard msg (mlm_client_recv (client));
+                    ZmsgGuard msg (mlm_client_recv (client));
 
                     //check if we need to leave the loop
                     if(m_stopRequested)
@@ -242,21 +243,20 @@ namespace mlm
                         {
                             item.second(payload);
                         }
-                        catch(const std::exception& e)
-                        {
-                          log_error("Error during processing callback [%i]: %s",item.first, e.what());
-                        }
                         catch (...) //Show Must Go On => Log errors and continue
                         {
-                          log_error("Error during processing callback [%i]: unknown error", item.first);
+                          //log_error("Error during processing callback [%i]: unknown error", item.first);
                         }
                     }
                 }
             }
+            
+            zpoller_destroy(&poller);
+            
         }
         catch (...) //Transfer the error to the main thread (only at startup)
         {
-          log_error("Error during starting the listener thread");
+          //log_error("Error during starting the listener thread");
           m_exPtr = std::current_exception();
           m_listenerStarted.notify_all();
         }
