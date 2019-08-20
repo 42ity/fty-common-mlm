@@ -93,6 +93,8 @@ typedef struct _fty_common_mlm_sync_client_t fty_common_mlm_sync_client_t;
 #define FTY_COMMON_MLM_SYNC_CLIENT_T_DEFINED
 typedef struct _fty_common_mlm_stream_client_t fty_common_mlm_stream_client_t;
 #define FTY_COMMON_MLM_STREAM_CLIENT_T_DEFINED
+typedef struct _fty_common_mlm_basic_mailbox_server_t fty_common_mlm_basic_mailbox_server_t;
+#define FTY_COMMON_MLM_BASIC_MAILBOX_SERVER_T_DEFINED
 
 
 //  Public classes, each with its own header file
@@ -105,6 +107,7 @@ typedef struct _fty_common_mlm_stream_client_t fty_common_mlm_stream_client_t;
 #include "fty_common_mlm_zconfig.h"
 #include "fty_common_mlm_sync_client.h"
 #include "fty_common_mlm_stream_client.h"
+#include "fty_common_mlm_basic_mailbox_server.h"
 
 #ifdef FTY_COMMON_MLM_BUILD_DRAFT_API
 

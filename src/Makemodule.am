@@ -21,6 +21,7 @@ src_libfty_common_mlm_la_SOURCES = \
     src/fty_common_mlm_zconfig.cc \
     src/fty_common_mlm_sync_client.cc \
     src/fty_common_mlm_stream_client.cc \
+    src/fty_common_mlm_basic_mailbox_server.cc \
     src/platform.h
 
 if ENABLE_DRAFTS

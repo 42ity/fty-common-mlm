@@ -27,6 +27,8 @@ fty_common_mlm_sync_client.txt
 fty_common_mlm_sync_client.doc
 fty_common_mlm_stream_client.txt
 fty_common_mlm_stream_client.doc
+fty_common_mlm_basic_mailbox_server.txt
+fty_common_mlm_basic_mailbox_server.doc
 
 # Make sure to track the manually maintained project description
 !*.adoc
