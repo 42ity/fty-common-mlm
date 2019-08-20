@@ -172,7 +172,7 @@ void fty_common_mlm_basic_mailbox_server_test_actor(zsock_t *pipe, void * /*args
     mlm::MlmBasicMailboxServer agent(  pipe, 
                                         server,
                                         testAgentName,
-                                        testEndpoint,
+                                        testEndpoint
                                     );
     agent.mainloop();
 }
