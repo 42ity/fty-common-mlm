@@ -1,0 +1,7 @@
+   fty-common-mlm -> libsodium;
+   fty-common-mlm -> libzmq;
+   fty-common-mlm -> czmq;
+   fty-common-mlm -> malamute;
+   fty-common-mlm -> cxxtools;
+   fty-common-mlm -> fty-common-logging;
+   fty-common-mlm -> fty-common;
