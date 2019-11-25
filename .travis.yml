@@ -1,6 +1,7 @@
 # Travis CI script
 # This is a skeleton created by zproject.
 # You can add hand-written code here.
+### Note: Customized after generation; take care upon regens
 
 language:
 - cpp
@@ -214,6 +215,8 @@ matrix:
   - env: BUILD_TYPE=default-Werror MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && export CC CXX"
 #  - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=clang-format-5.0
   - env: BUILD_TYPE=clang-format-check CLANG_FORMAT=clang-format-5.0
+# fty_common_mlm_subprocess is very unstable under memcheck
+  - env: BUILD_TYPE=valgrind
 
 before_install:
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
