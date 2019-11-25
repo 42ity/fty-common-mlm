@@ -24,7 +24,7 @@ if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libsodium-dev >
        (command -v brew >/dev/null 2>&1 && brew ls --versions libsodium >/dev/null 2>&1) || \
        ([ -e "libsodium" ]) \
 ; then
- FOLDER_NAME="libsodium-stable"
+ FOLDER_NAME="libsodium"
 
  if [ -d "$FOLDER_NAME" ]; then
     echo "$FOLDER_NAME already exist. Skipped." >&2
@@ -32,8 +32,19 @@ if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libsodium-dev >
     echo ""
     BASE_PWD=${PWD}
     echo "`date`: INFO: Building prerequisite 'libsodium' from Git repository..." >&2
-    echo "git clone -b stable https://github.com/42ity/libsodium.git $FOLDER_NAME"
-    $CI_TIME git clone --quiet --depth 1 -b stable https://github.com/42ity/libsodium.git $FOLDER_NAME
+    if [ "x$REQUESTED_BRANCH" = "x" ]; then
+        echo "git clone https://github.com/42ity/libsodium.git $FOLDER_NAME"
+        $CI_TIME git clone --quiet --depth 1 https://github.com/42ity/libsodium.git $FOLDER_NAME
+    else
+        if git ls-remote --heads https://github.com/42ity/libsodium.git | grep -q "$REQUESTED_BRANCH"; then
+            echo "git clone -b "$REQUESTED_BRANCH" https://github.com/42ity/libsodium.git $FOLDER_NAME"
+            $CI_TIME git clone --quiet --depth 1 -b "$REQUESTED_BRANCH" https://github.com/42ity/libsodium.git $FOLDER_NAME
+        else
+            echo "$REQUESTED_BRANCH not found for https://github.com/42ity/libsodium.git"
+            echo "git clone https://github.com/42ity/libsodium.git $FOLDER_NAME"
+            $CI_TIME git clone --quiet --depth 1 https://github.com/42ity/libsodium.git $FOLDER_NAME
+        fi
+    fi
     cd "./$FOLDER_NAME"
     CCACHE_BASEDIR=${PWD}
     export CCACHE_BASEDIR
