@@ -99,6 +99,6 @@
     <class name = "fty_common_mlm_stream_client" selftest = "1" stable = "1">Simple malamute client for stream</class>
     
     <!-- Note: Helper implementing fty::SyncServer -->
-    <class name = "fty_common_mlm_basic_mailbox_server" selftest = "1" stable = "1">Basic malamute synchronous mailbox server </class>
+    <class name = "fty_common_mlm_basic_mailbox_server" selftest = "0" stable = "1">Basic malamute synchronous mailbox server </class>
 
 </project>
