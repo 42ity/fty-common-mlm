@@ -40,12 +40,12 @@ typedef struct {
 static test_item_t
 all_tests [] = {
 // Tests for stable public classes:
-    { "fty_common_mlm_subprocess", fty_common_mlm_subprocess_test, true, true, NULL },
     { "fty_common_mlm_tntmlm", fty_common_mlm_tntmlm_test, true, true, NULL },
     { "fty_common_mlm_utils", fty_common_mlm_utils_test, true, true, NULL },
     { "fty_common_mlm_zconfig", fty_common_mlm_zconfig_test, true, true, NULL },
     { "fty_common_mlm_sync_client", fty_common_mlm_sync_client_test, true, true, NULL },
     { "fty_common_mlm_stream_client", fty_common_mlm_stream_client_test, true, true, NULL },
+    { "fty_common_mlm_basic_mailbox_server", fty_common_mlm_basic_mailbox_server_test, true, true, NULL },
     {NULL, NULL, 0, 0, NULL}          //  Sentinel
 };
 
