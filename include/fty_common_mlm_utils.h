@@ -25,6 +25,7 @@
 #ifdef __cplusplus
 #include <map>
 #include <czmq.h>
+#include <string>
 
 // malamute endpoint
 #define MLM_ENDPOINT    "ipc://@/malamute"
