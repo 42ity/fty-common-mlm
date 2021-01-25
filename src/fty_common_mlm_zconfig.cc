@@ -29,6 +29,7 @@
 #include "fty_common_mlm_classes.h"
 
 #include <stdexcept>
+#include <string>
 
 namespace mlm
 {
@@ -41,17 +42,31 @@ namespace mlm
             throw std::runtime_error("Impossible to read the config file <"+path+">");
         }
     }
-    
+
     ZConfig::~ZConfig()
     {
         zconfig_destroy(&m_ptrConfig);
     }
-    
+
     std::string ZConfig::getEntry(const std::string & entry, const std::string defaultValue) const
     {
         return std::string(zconfig_get(m_ptrConfig, entry.c_str(), defaultValue.c_str()));
     }
-    
+
+    void ZConfig::setEntry(const std::string & entry, const std::string value)
+    {
+        zconfig_put(m_ptrConfig, entry.c_str(), value.c_str());
+    }
+
+    void ZConfig::save(const std::string & path)
+    {
+        int result = zconfig_save(m_ptrConfig, path.c_str());
+        if(result != 0)
+        {
+            throw std::runtime_error("Impossible to save the config file <"+path+">, error: "+std::to_string(result));
+        }
+    }
+
 } // namespace mlm
 
 #define SELFTEST_DIR_RO "src/selftest-ro"
@@ -63,7 +78,7 @@ fty_common_mlm_zconfig_test (bool verbose)
     printf (" * fty_common_mlm_zconfig: ");
 
     //  @selftest
-    
+
     //open a none existing file
     try
     {
@@ -72,19 +87,25 @@ fty_common_mlm_zconfig_test (bool verbose)
     }
     catch(std::runtime_error &)
     {}
-    
-    
+
+
     //open an existing file
     mlm::ZConfig config(SELFTEST_DIR_RO"/test.conf");
-    
+
     assert(config.getEntry("server/timeout") == "10000");
     assert(config.getEntry("server/endpoint") == "ipc://@/malamute");
     assert(config.getEntry("log/config") == "/etc/fty/ftylog.cfg");
     assert(config.getEntry("data") == "lotOfData");
-    
+
     assert(config.getEntry("none/existing/entry") == "");
     assert(config.getEntry("none/existing/entry", "default") == "default");
-    
+
+    config.setEntry("data", "lotOfMoreData");
+    assert(config.getEntry("data") == "lotOfMoreData");
+
+    config.setEntry("none/existing/entry", "lotOfMoreData");
+    assert(config.getEntry("none/existing/entry") == "lotOfMoreData");
+
     //  @end
     printf ("OK\n");
 }
