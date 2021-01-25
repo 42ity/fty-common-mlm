@@ -104,7 +104,7 @@ fty_common_mlm_zconfig_test (bool verbose)
     assert(config.getEntry("data") == "lotOfMoreData");
 
     config.setEntry("none/existing/entry", "lotOfMoreData");
-    assert(config.getEntry("none/existing/entry") == "data");
+    assert(config.getEntry("none/existing/entry") == "lotOfMoreData");
 
     //  @end
     printf ("OK\n");
