@@ -32,13 +32,14 @@ namespace mlm
     private:
         //attributs
         zconfig_t * m_ptrConfig;
-    
+
+
     public:
         explicit ZConfig(const std::string & path);
         ~ZConfig();
-        
+
         //methods
-        
+
         /**
          * @brief Return the value of config entry or default value if the entry do not exist
          *
@@ -46,9 +47,24 @@ namespace mlm
          * @param default value (empty string)
          */
         std::string getEntry(const std::string & entry, const std::string defaultValue = "") const;
-       
+
+        /**
+         * @brief Set an entry in zconfig
+         *
+         * @param entry path
+         * @param value value
+         */
+        void setEntry(const std::string & entry, const std::string value);
+
+        /**
+         * @brief Save a zconfig in a file
+         *
+         * @param path path to the file
+         */
+        void save(const std::string & path);
+
     };
-    
+
 } // namespace mlm
 
 void
