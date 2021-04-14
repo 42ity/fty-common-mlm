@@ -29,6 +29,7 @@
 #include "fty_common_mlm_basic_mailbox_server.h"
 #include "fty_common_mlm_guards.h"
 #include <fty_log.h>
+#include <stdexcept>
 
 namespace mlm {
 

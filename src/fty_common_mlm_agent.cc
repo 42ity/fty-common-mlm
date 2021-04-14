@@ -29,6 +29,7 @@
 #include "fty_common_mlm_agent.h"
 #include "fty_common_mlm_guards.h"
 #include <fty_log.h>
+#include <stdexcept>
 
 
 namespace mlm {

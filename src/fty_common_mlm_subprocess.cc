@@ -444,7 +444,7 @@ static int xzloop_add_fd(zloop_t* self, int fd, zloop_fn handler, void* arg)
 }
 
 // handle incoming data on fd
-static int s_handler(zloop_t* loop, zmq_pollitem_t* item, void* arg)
+static int s_handler([[maybe_unused]]zloop_t* loop, zmq_pollitem_t* item, void* arg)
 {
     assert(loop); // remove compiler warning
     struct sbp_info_t* i = reinterpret_cast<struct sbp_info_t*>(arg);
@@ -460,7 +460,7 @@ static int s_handler(zloop_t* loop, zmq_pollitem_t* item, void* arg)
 }
 
 // ping the process
-static int s_ping_process(zloop_t* loop, int /*timer_id*/, void* args)
+static int s_ping_process([[maybe_unused]]zloop_t* loop, int /*timer_id*/, void* args)
 {
     assert(loop); // remove compiler warning
     struct sbp_info_t* i = reinterpret_cast<struct sbp_info_t*>(args);
