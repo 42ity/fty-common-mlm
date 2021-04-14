@@ -19,36 +19,29 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_UTILS_H_INCLUDED
-#define FTY_COMMON_MLM_UTILS_H_INCLUDED
+#pragma once
 
 #ifdef __cplusplus
-#include <map>
 #include <czmq.h>
+#include <map>
 #include <string>
 
 // malamute endpoint
-#define MLM_ENDPOINT    "ipc://@/malamute"
+#define MLM_ENDPOINT "ipc://@/malamute"
 
 namespace MlmUtils {
 
-    // convert zhash_t to std::map
-    std::map<std::string, std::string>
-    zhash_to_map(zhash_t *hash);
+// convert zhash_t to std::map
+std::map<std::string, std::string> zhash_to_map(zhash_t* hash);
 
-    // convert map to zhash_t and take responsobility for destorying it
-    zhash_t *
-    map_to_zhash (std::map<std::string, std::string> map_to_convert);
+// convert map to zhash_t and take responsobility for destorying it
+zhash_t* map_to_zhash(std::map<std::string, std::string> map_to_convert);
 
-    /** \brief do a memory clean zmsg_popstr call
-     *   \return a std::string object
-     */
-    std::string zmsg_popstring(zmsg_t *resp);
+/** \brief do a memory clean zmsg_popstr call
+ *   \return a std::string object
+ */
+std::string zmsg_popstring(zmsg_t* resp);
 
-} //namespace
-
-void
-fty_common_mlm_utils_test (bool verbose);
+} // namespace MlmUtils
 
 #endif
-#endif //FTY_COMMON_MLM_UTILS_H_INCLUDED

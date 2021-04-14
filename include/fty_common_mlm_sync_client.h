@@ -19,44 +19,31 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_SYNC_CLIENT_H_INCLUDED
-#define FTY_COMMON_MLM_SYNC_CLIENT_H_INCLUDED
+#pragma once
 
 #include "fty_common_client.h"
-
 #include <string>
 #include <vector>
-#include <functional>
 
 
-namespace mlm
+namespace mlm {
+// This class is thread safe.
+
+class MlmSyncClient : public fty::SyncClient // Implement interface for synchronous client
 {
-    // This class is thread safe.
-    
-    class MlmSyncClient
-        : public fty::SyncClient //Implement interface for synchronous client
-    {    
-    public:
-        explicit MlmSyncClient(   const std::string & clientId,
-                                  const std::string & destination,
-                                  uint32_t timeout = 1000,
-                                  const std::string & endPoint = "ipc://@/malamute");
-        
-        //methods
-        std::vector<std::string> syncRequestWithReply(const std::vector<std::string> & payload) override;
-        
-    private:
-        //attributs
-        std::string m_clientId;
-        std::string m_destination;
-        uint32_t m_timeout;
-        std::string m_endpoint;           
-    };
-    
-} //namespace mlm
+public:
+    explicit MlmSyncClient(const std::string& clientId, const std::string& destination, uint32_t timeout = 1000,
+        const std::string& endPoint = "ipc://@/malamute");
 
-//  Self test of this class
-void
-    fty_common_mlm_sync_client_test (bool verbose);
+    // methods
+    std::vector<std::string> syncRequestWithReply(const std::vector<std::string>& payload) override;
 
-#endif
+private:
+    // attributs
+    std::string m_clientId;
+    std::string m_destination;
+    uint32_t    m_timeout;
+    std::string m_endpoint;
+};
+
+} // namespace mlm

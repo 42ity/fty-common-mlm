@@ -26,122 +26,112 @@
 @end
 */
 
-#include "fty_common_mlm_classes.h"
+#include "fty_common_mlm_basic_mailbox_server.h"
+#include "fty_common_mlm_guards.h"
+#include <fty_log.h>
 
-namespace mlm
+namespace mlm {
+
+using namespace fty;
+
+using Subject = std::string;
+
+MlmBasicMailboxServer::MlmBasicMailboxServer(
+    zsock_t* pipe, fty::SyncServer& server, const std::string& name, const std::string& endpoint)
+    : mlm::MlmAgent(pipe)
+    , m_server(server)
+    , m_name(name)
+    , m_endpoint(endpoint)
 {
+    connect(m_endpoint.c_str(), m_name.c_str());
+}
 
-    using namespace fty;
+bool MlmBasicMailboxServer::handleMailbox(zmsg_t* message)
+{
+    std::string correlationId;
 
-    using Subject = std::string;
+    // try to address the request
+    try {
+        Subject subject(mlm_client_subject(client()));
+        Sender  uniqueSender(mlm_client_sender(client()));
 
-    MlmBasicMailboxServer::MlmBasicMailboxServer(zsock_t *pipe,
-                                                 fty::SyncServer & server,
-                                                 const std::string & name,
-                                                 const std::string & endpoint)
-        :   mlm::MlmAgent(pipe),
-            m_server(server),
-            m_name(name),
-            m_endpoint(endpoint)
+        // ignore none "REQUEST" message
+        if (subject != "REQUEST") {
+            log_warning("<%s> Received mailbox message with subject '%s' from '%s', ignoring", m_name.c_str(),
+                subject.c_str(), uniqueSender.c_str());
+            return true;
+        }
+
+        // Get number of frame all the frame
+        size_t numberOfFrame = zmsg_size(message);
+
+        log_debug("<%s> Received mailbox message with subject '%s' from '%s' with %i frames", m_name.c_str(),
+            subject.c_str(), uniqueSender.c_str(), numberOfFrame);
+
+
+        /*  Message is valid if the header contain at least the following frame:
+         * 0. Correlation id
+         * 1. data
+         */
+
+        // TODO define a maximum to avoid DOS
+
+        ZstrGuard ptrCorrelationId(zmsg_popstr(message));
+
+        Payload payload;
+
+        // we unstack all the other starting by the 3rd one.
+        for (size_t index = 1; index < numberOfFrame; index++) {
+            ZstrGuard param(zmsg_popstr(message));
+            payload.push_back(std::string(param.get()));
+        }
+
+        // Ensure the presence of data from the request
+        if (ptrCorrelationId != nullptr) {
+            correlationId = std::string(ptrCorrelationId.get());
+        }
+
+        if (correlationId.empty()) {
+            // no correlation id, it's a bad frame we ignore it
+            throw std::runtime_error("<" + m_name + "> Correlation id frame is empty");
+        }
+
+        // extract the sender from unique sender id: <Sender>.[thread id in hexa]
+        Sender sender = uniqueSender.substr(0, (uniqueSender.size() - (sizeof(pid_t) * 2) - 1));
+
+        // Execute the request
+        Payload results = m_server.handleRequest(sender, payload);
+
+        // send the result if it's not empty
+        if (!results.empty()) {
+            zmsg_t* reply = zmsg_new();
+
+            zmsg_addstr(reply, correlationId.c_str());
+
+            for (const std::string& result : results) {
+                zmsg_addstr(reply, result.c_str());
+            }
+
+            int rv = mlm_client_sendto(client(), mlm_client_sender(client()), "REPLY", nullptr, 1000, &reply);
+            if (rv != 0) {
+                log_error(
+                    "<%s> s_handle_mailbox: failed to send reply to %s ", m_name.c_str(), mlm_client_sender(client()));
+            }
+        }
+
+    } catch (std::exception& e) {
+        log_error("<%s> Unexpected error: %s", m_name.c_str(), e.what());
+    } catch (...) // show must go one => Log and ignore the unknown error
     {
-        connect(m_endpoint.c_str(), m_name.c_str());
+        log_error("<%s> Unexpected error: unknown", m_name.c_str());
     }
 
-    bool MlmBasicMailboxServer::handleMailbox(zmsg_t *message)
-    {
-        std::string correlationId;
+    return true;
+}
 
-        //try to address the request
-        try
-        {
-            Subject subject(mlm_client_subject(client()));
-            Sender uniqueSender(mlm_client_sender(client()));
+} // namespace mlm
 
-            //ignore none "REQUEST" message
-            if (subject != "REQUEST")
-            {
-                log_warning ("<%s> Received mailbox message with subject '%s' from '%s', ignoring", m_name.c_str(), subject.c_str(),uniqueSender.c_str());
-                return true;
-            }
-
-            //Get number of frame all the frame
-            size_t numberOfFrame = zmsg_size(message);
-
-            log_debug("<%s> Received mailbox message with subject '%s' from '%s' with %i frames", m_name.c_str(), subject.c_str(), uniqueSender.c_str(), numberOfFrame);
-
-
-            /*  Message is valid if the header contain at least the following frame:
-             * 0. Correlation id
-             * 1. data
-             */
-
-            //TODO define a maximum to avoid DOS
-
-            ZstrGuard ptrCorrelationId( zmsg_popstr(message) );
-
-            Payload payload;
-
-            //we unstack all the other starting by the 3rd one.
-            for(size_t index = 1; index < numberOfFrame; index++)
-            {
-                ZstrGuard param( zmsg_popstr(message) );
-                payload.push_back( std::string(param.get()) );
-            }
-
-            //Ensure the presence of data from the request
-            if(ptrCorrelationId != nullptr)
-            {
-                correlationId = std::string(ptrCorrelationId.get());
-            }
-
-            if(correlationId.empty())
-            {
-                //no correlation id, it's a bad frame we ignore it
-                throw std::runtime_error("<"+m_name+"> Correlation id frame is empty");
-            }
-
-            //extract the sender from unique sender id: <Sender>.[thread id in hexa]
-            Sender sender = uniqueSender.substr(0, (uniqueSender.size()-(sizeof(pid_t)*2)-1));
-
-            //Execute the request
-            Payload results = m_server.handleRequest(sender, payload);
-
-            //send the result if it's not empty
-            if(!results.empty())
-            {
-                zmsg_t *reply = zmsg_new();
-
-                zmsg_addstr (reply, correlationId.c_str());
-
-                for(const std::string & result : results)
-                {
-                    zmsg_addstr (reply, result.c_str());
-                }
-
-                int rv = mlm_client_sendto (client(), mlm_client_sender (client()),
-                                    "REPLY", NULL, 1000, &reply);
-                if (rv != 0)
-                {
-                    log_error ("<%s> s_handle_mailbox: failed to send reply to %s ",
-                            m_name.c_str(), mlm_client_sender (client()));
-                }
-            }
-
-        }
-        catch (std::exception &e)
-        {
-            log_error("<%s> Unexpected error: %s", m_name.c_str(), e.what());
-        }
-        catch (...) //show must go one => Log and ignore the unknown error
-        {
-            log_error("<%s> Unexpected error: unknown", m_name.c_str());
-        }
-
-        return true;
-    }
-
-} //namespace mlm
-
+#if 0
 //  --------------------------------------------------------------------------
 //  Self test of this class
 
@@ -158,8 +148,8 @@ namespace mlm
 #define SELFTEST_DIR_RO "src/selftest-ro"
 #define SELFTEST_DIR_RW "src/selftest-rw"
 
-#include "fty_common_unit_tests.h"
 #include "fty_common_mlm_sync_client.h"
+#include "fty_common_unit_tests.h"
 
 static const char* testEndpoint = "inproc://fty_common_mlm_basic_mailbox_server_test";
 static const char* testAgentName = "fty_common_mlm_basic_mailbox_server_test";
@@ -212,3 +202,4 @@ fty_common_mlm_basic_mailbox_server_test (bool verbose)
     
     printf ("Ok\n");
 }
+#endif

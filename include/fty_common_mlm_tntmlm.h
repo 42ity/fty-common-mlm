@@ -19,55 +19,53 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_TNTMLM_H_INCLUDED
-#define FTY_COMMON_MLM_TNTMLM_H_INCLUDED
+#pragma once
 
 // Original idea of using cxxtools::Pool of mlm_client_t* connections
 // by Michal Hrusecky <michal@hrusecky.net>
 
+#include <cxxtools/pool.h>
+#include <fty_log.h>
+#include <malamute.h>
 #include <memory>
 #include <string>
 
-#include <cxxtools/pool.h>
-#include <malamute.h>
-#include <fty_log.h>
+class MlmClient
+{
+public:
+    static const std::string ENDPOINT;
 
-class MlmClient {
-    public:
-        static const std::string ENDPOINT;
+    MlmClient();
+    virtual ~MlmClient();
 
-        MlmClient ();
-        virtual ~MlmClient ();
+    // timeout <0, 300> seconds, greater number trimmed
+    // based on specified uuid returns expected message or NULL on expire/interrupt
+    virtual zmsg_t* recv(const std::string& uuid, uint32_t timeout);
 
-        // timeout <0, 300> seconds, greater number trimmed
-        // based on specified uuid returns expected message or NULL on expire/interrupt
-        virtual zmsg_t*     recv (const std::string& uuid, uint32_t timeout);
+    // implements request reply pattern
+    // method prepends two frames
+    zmsg_t* requestreply(const std::string& address, const std::string& subject, uint32_t timeout, zmsg_t** content_p);
+    virtual int sendto(const std::string& address, const std::string& subject, uint32_t timeout, zmsg_t** content_p);
+    bool        connected()
+    {
+        return mlm_client_connected(_client);
+    }
+    const char* subject()
+    {
+        return mlm_client_subject(_client);
+    }
+    const char* sender()
+    {
+        return mlm_client_sender(_client);
+    }
 
-        // implements request reply pattern
-        // method prepends two frames
-        zmsg_t*     requestreply (const std::string& address,
-                                  const std::string& subject,
-                                  uint32_t timeout,
-                                  zmsg_t **content_p);
-        virtual int         sendto (const std::string& address,
-                            const std::string& subject,
-                            uint32_t timeout,
-                            zmsg_t **content_p);
-        bool        connected () { return mlm_client_connected (_client); }
-        const char* subject () { return mlm_client_subject (_client); }
-        const char* sender () { return mlm_client_sender (_client); }
-
-    private:
-        void connect ();
-        mlm_client_t*   _client;
-        zuuid_t*        _uuid;
-        zpoller_t*      _poller;
+private:
+    void          connect();
+    mlm_client_t* _client;
+    zuuid_t*      _uuid;
+    zpoller_t*    _poller;
 };
 
-typedef cxxtools::Pool <MlmClient> MlmClientPool;
+typedef cxxtools::Pool<MlmClient> MlmClientPool;
 
 extern MlmClientPool mlm_pool;
-
-void fty_common_mlm_tntmlm_test (bool verbose);
-
-#endif

@@ -19,55 +19,41 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_BASIC_MAILBOX_SERVER_H_INCLUDED
-#define FTY_COMMON_MLM_BASIC_MAILBOX_SERVER_H_INCLUDED
+#pragma once
 
-#include "fty_common_sync_server.h"
 #include "fty_common_mlm_agent.h"
-
+#include "fty_common_sync_server.h"
 #include <string>
-#include <vector>
-#include <functional>
 
 
-namespace mlm
+namespace mlm {
+
+/**
+ * \brief Handler for basic mailbox server using object
+ *        implementing fty::SyncServer interface.
+ *
+ * The server receive request using mailbox with the following protocol:
+ *  - Requests have as subject "REQUEST" and replies "REPLY"
+ *  - The first frame in request or reply is a correlation Id
+ *  - The following frames are a payload frames
+ *
+ * \see fty_common_mlm_sync_client.h
+ */
+
+class MlmBasicMailboxServer : public mlm::MlmAgent
 {
-   
-    /**
-     * \brief Handler for basic mailbox server using object
-     *        implementing fty::SyncServer interface.
-     * 
-     * The server receive request using mailbox with the following protocol:
-     *  - Requests have as subject "REQUEST" and replies "REPLY" 
-     *  - The first frame in request or reply is a correlation Id
-     *  - The following frames are a payload frames
-     * 
-     * \see fty_common_mlm_sync_client.h
-     */
-    
-    class MlmBasicMailboxServer : public mlm::MlmAgent
-    {    
-    public:
-        explicit MlmBasicMailboxServer( zsock_t *pipe,
-                                        fty::SyncServer & server,
-                                        const std::string & name,
-                                        const std::string & endpoint = "ipc://@/malamute");
-    private:
-        bool handleMailbox(zmsg_t *message) override;
-        
-    private:
-        //attributs
-        fty::SyncServer & m_server;
-        std::string m_name;
-        std::string m_endpoint;           
-    };
-    
-} //namespace mlm
+public:
+    explicit MlmBasicMailboxServer(zsock_t* pipe, fty::SyncServer& server, const std::string& name,
+        const std::string& endpoint = "ipc://@/malamute");
 
+private:
+    bool handleMailbox(zmsg_t* message) override;
 
-//  Self test of this class
-void
-    fty_common_mlm_basic_mailbox_server_test (bool verbose);
+private:
+    // attributs
+    fty::SyncServer& m_server;
+    std::string      m_name;
+    std::string      m_endpoint;
+};
 
-
-#endif
+} // namespace mlm

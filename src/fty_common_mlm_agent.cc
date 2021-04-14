@@ -26,126 +26,122 @@
 @end
 */
 
-#include "fty_common_mlm_classes.h"
+#include "fty_common_mlm_agent.h"
+#include "fty_common_mlm_guards.h"
+#include <fty_log.h>
 
-namespace mlm
+
+namespace mlm {
+MlmAgent::~MlmAgent()
 {
-    MlmAgent::~MlmAgent()
-    {
-        mlm_client_destroy(&m_client);
-        zpoller_destroy(&m_defaultZpoller);
+    mlm_client_destroy(&m_client);
+    zpoller_destroy(&m_defaultZpoller);
+}
+
+MlmAgent::MlmAgent(zsock_t* pipe, const char* endpoint, const char* address, int pollerTimeout, int connectionTimeout)
+    : m_client(mlm_client_new())
+    , m_pipe(pipe)
+    , m_lastTick(zclock_mono())
+    , m_pollerTimeout(pollerTimeout)
+    , m_defaultZpoller(nullptr)
+{
+
+    if (!m_client) {
+        log_error("mlm_client_new() failed.");
+        throw std::runtime_error("Can't create client");
     }
-
-    MlmAgent::MlmAgent(zsock_t *pipe, const char *endpoint, const char *address, int pollerTimeout, int connectionTimeout)
-        : m_client(mlm_client_new()),
-        m_pipe(pipe),
-        m_lastTick(zclock_mono()),
-        m_pollerTimeout(pollerTimeout),
-        m_defaultZpoller(nullptr)
-    {
-        
-        if (!m_client) {
-            log_error("mlm_client_new() failed.");
-            throw std::runtime_error("Can't create client");
-        }
-        if (endpoint && address) {
-            connect( endpoint, address, connectionTimeout);
-        }
+    if (endpoint && address) {
+        connect(endpoint, address, connectionTimeout);
     }
+}
 
-    void MlmAgent::connect(const char *endpoint, const char *address, int connectionTimeout)
-    {
-        log_debug("endpoint: %s", endpoint);
-        if (mlm_client_connect(m_client, endpoint, connectionTimeout, address) == -1) {
-            log_error("mlm_client_connect(endpoint = '%s', timeout = '%d', address = '%s') failed.",
-                    endpoint, connectionTimeout, address);
-            throw std::runtime_error("Can't connect client");
-        }
+void MlmAgent::connect(const char* endpoint, const char* address, int connectionTimeout)
+{
+    log_debug("endpoint: %s", endpoint);
+    if (mlm_client_connect(m_client, endpoint, uint32_t(connectionTimeout), address) == -1) {
+        log_error("mlm_client_connect(endpoint = '%s', timeout = '%d', address = '%s') failed.", endpoint,
+            connectionTimeout, address);
+        throw std::runtime_error("Can't connect client");
     }
+}
 
 
-    void MlmAgent::mainloop()
-    {
-        zsock_signal(m_pipe, 0);
-        log_debug("actor ready");
+void MlmAgent::mainloop()
+{
+    zsock_signal(m_pipe, 0);
+    log_debug("actor ready");
 
-        while (!zsys_interrupted) {
-            void *which = zpoller_wait(zpoller(), m_pollerTimeout);
+    while (!zsys_interrupted) {
+        void* which = zpoller_wait(zpoller(), m_pollerTimeout);
 
-            // Handle periodic callback hook
-            if (m_pollerTimeout > 0) {
-                int64_t curClock = zclock_mono();
-                if (m_lastTick + m_pollerTimeout < curClock) {
-                    if (!tick()) {
-                        break;
-                    }
-                    m_lastTick = curClock;
+        // Handle periodic callback hook
+        if (m_pollerTimeout > 0) {
+            int64_t curClock = zclock_mono();
+            if (m_lastTick + m_pollerTimeout < curClock) {
+                if (!tick()) {
+                    break;
                 }
+                m_lastTick = curClock;
             }
+        }
 
-            if (which == m_pipe) {
-                ZmsgGuard message(zmsg_recv(m_pipe));
-                if (message == nullptr) {
-                    log_debug("interrupted");
-                    break;
-                }
-                if (!handlePipe(message.get())) {
-                    break;
-                }
+        if (which == m_pipe) {
+            ZmsgGuard message(zmsg_recv(m_pipe));
+            if (message == nullptr) {
+                log_debug("interrupted");
+                break;
             }
-            else if (which == mlm_client_msgpipe(m_client)) {
-                ZmsgGuard message(mlm_client_recv(m_client));
-                if (message == nullptr) {
-                    log_debug("interrupted");
-                    break;
-                }
-                else if (streq(mlm_client_command(m_client), "MAILBOX DELIVER")) {
-                    if (!handleMailbox(message.get())) {
-                        break;
-                    }
-                }
-                else if (streq(mlm_client_command(m_client), "STREAM DELIVER")) {
-                    if (!handleStream(message.get())) {
-                        break;
-                    }
-                }
-                else {
-                    log_warning("Unknown malamute pattern: '%s'. Message subject: '%s', sender: '%s'.",
-                            mlm_client_command(m_client), mlm_client_subject(m_client), mlm_client_sender(m_client));
-                }
+            if (!handlePipe(message.get())) {
+                break;
             }
-            else if (which != nullptr) {
-                ZmsgGuard message(zmsg_recv(which));
-                if (message == nullptr) {
-                    log_debug("interrupted");
+        } else if (which == mlm_client_msgpipe(m_client)) {
+            ZmsgGuard message(mlm_client_recv(m_client));
+            if (message == nullptr) {
+                log_debug("interrupted");
+                break;
+            } else if (streq(mlm_client_command(m_client), "MAILBOX DELIVER")) {
+                if (!handleMailbox(message.get())) {
                     break;
                 }
-                if (!handleOther(message.get(), which)) {
+            } else if (streq(mlm_client_command(m_client), "STREAM DELIVER")) {
+                if (!handleStream(message.get())) {
                     break;
                 }
+            } else {
+                log_warning("Unknown malamute pattern: '%s'. Message subject: '%s', sender: '%s'.",
+                    mlm_client_command(m_client), mlm_client_subject(m_client), mlm_client_sender(m_client));
+            }
+        } else if (which != nullptr) {
+            ZmsgGuard message(zmsg_recv(which));
+            if (message == nullptr) {
+                log_debug("interrupted");
+                break;
+            }
+            if (!handleOther(message.get(), which)) {
+                break;
             }
         }
     }
+}
 
-    bool MlmAgent::handlePipe(zmsg_t *message)
-    {
-        ZstrGuard actor_command(zmsg_popstr(message));
+bool MlmAgent::handlePipe(zmsg_t* message)
+{
+    ZstrGuard actor_command(zmsg_popstr(message));
 
-        //  $TERM actor command implementation is required by zactor_t interface
-        if (streq(actor_command, "$TERM")) {
-            return false;
-        }
-
-        return true;
+    //  $TERM actor command implementation is required by zactor_t interface
+    if (streq(actor_command, "$TERM")) {
+        return false;
     }
 
-    zpoller_t* MlmAgent::zpoller(void)
-    {
-        if (!m_defaultZpoller) {
-            m_defaultZpoller = zpoller_new(m_pipe, mlm_client_msgpipe(m_client), nullptr);
-        }
-        return m_defaultZpoller;
-    }
-    
-} // namepace mlm
+    return true;
+}
 
+zpoller_t* MlmAgent::zpoller(void)
+{
+    if (!m_defaultZpoller) {
+        m_defaultZpoller = zpoller_new(m_pipe, mlm_client_msgpipe(m_client), nullptr);
+    }
+    return m_defaultZpoller;
+}
+
+} // namespace mlm
