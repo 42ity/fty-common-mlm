@@ -1,2 +1,3 @@
 usr/include/*
 usr/lib/*/pkgconfig/libfty_common_mlm.pc
+usr/lib/*/libfty_common_mlm.so
