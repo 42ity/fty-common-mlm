@@ -19,50 +19,56 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_GUARDS_H_INCLUDED
-#define FTY_COMMON_MLM_GUARDS_H_INCLUDED
+#pragma once
 
-#include <malamute.h>
 #include <czmq.h>
+#include <malamute.h>
 
-template<typename T, void (*destructor)(T**)>
+template <typename T, void (*destructor)(T**)>
 class MlmObjGuard
 {
 public:
     MlmObjGuard()
         : ptr_(nullptr)
-    {}
+    {
+    }
+
     explicit MlmObjGuard(T* ptr)
         : ptr_(ptr)
-    {}
+    {
+    }
+
     MlmObjGuard(const MlmObjGuard&) = delete;
+
     ~MlmObjGuard()
     {
         destructor(&ptr_);
     }
+
     T* operator=(T* ptr)
     {
         destructor(&ptr_);
         ptr_ = ptr;
         return ptr_;
     }
+
     operator T*()
     {
         return ptr_;
     }
+
     T* get()
     {
         return ptr_;
     }
+
 private:
     T* ptr_;
 };
 
 typedef MlmObjGuard<mlm_client_t, mlm_client_destroy> MlmClientGuard;
-typedef MlmObjGuard<zpoller_t, zpoller_destroy> ZpollerGuard;
-typedef MlmObjGuard<zmsg_t, zmsg_destroy> ZmsgGuard;
-typedef MlmObjGuard<zuuid_t, zuuid_destroy> ZuuidGuard;
-typedef MlmObjGuard<char, zstr_free> ZstrGuard;
-typedef MlmObjGuard<zconfig_t, zconfig_destroy> ZconfigGuard;
-
-#endif
+typedef MlmObjGuard<zpoller_t, zpoller_destroy>       ZpollerGuard;
+typedef MlmObjGuard<zmsg_t, zmsg_destroy>             ZmsgGuard;
+typedef MlmObjGuard<zuuid_t, zuuid_destroy>           ZuuidGuard;
+typedef MlmObjGuard<char, zstr_free>                  ZstrGuard;
+typedef MlmObjGuard<zconfig_t, zconfig_destroy>       ZconfigGuard;

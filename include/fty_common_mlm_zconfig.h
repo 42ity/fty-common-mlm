@@ -19,55 +19,47 @@
     =========================================================================
 */
 
-#ifndef FTY_COMMON_MLM_ZCONFIG_H_INCLUDED
-#define FTY_COMMON_MLM_ZCONFIG_H_INCLUDED
+#pragma once
 
 #include <czmq.h>
 #include <string>
 
-namespace mlm
+namespace mlm {
+class ZConfig
 {
-    class ZConfig
-    {
-    private:
-        //attributs
-        zconfig_t * m_ptrConfig;
+private:
+    // attributs
+    zconfig_t* m_ptrConfig;
 
 
-    public:
-        explicit ZConfig(const std::string & path);
-        ~ZConfig();
+public:
+    explicit ZConfig(const std::string& path);
+    ~ZConfig();
 
-        //methods
+    // methods
 
-        /**
-         * @brief Return the value of config entry or default value if the entry do not exist
-         *
-         * @param entry path
-         * @param default value (empty string)
-         */
-        std::string getEntry(const std::string & entry, const std::string defaultValue = "") const;
+    /**
+     * @brief Return the value of config entry or default value if the entry do not exist
+     *
+     * @param entry path
+     * @param defaultValue value (empty string)
+     */
+    std::string getEntry(const std::string& entry, const std::string defaultValue = "") const;
 
-        /**
-         * @brief Set an entry in zconfig
-         *
-         * @param entry path
-         * @param value value
-         */
-        void setEntry(const std::string & entry, const std::string value);
+    /**
+     * @brief Set an entry in zconfig
+     *
+     * @param entry path
+     * @param value value
+     */
+    void setEntry(const std::string& entry, const std::string value);
 
-        /**
-         * @brief Save a zconfig in a file
-         *
-         * @param path path to the file
-         */
-        void save(const std::string & path);
-
-    };
+    /**
+     * @brief Save a zconfig in a file
+     *
+     * @param path path to the file
+     */
+    void save(const std::string& path);
+};
 
 } // namespace mlm
-
-void
-fty_common_mlm_zconfig_test (bool verbose);
-
-#endif

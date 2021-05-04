@@ -19,49 +19,13 @@
     =========================================================================
 */
 
-/*
-@header
-    fty_common_mlm_utils -
-@discuss
-@end
-*/
-#include <cxxtools/jsondeserializer.h>
-#include <fty_common_mlm_utils.h>
+#include "fty_common_mlm_utils.h"
+#include <catch2/catch.hpp>
 #include <fty_common_utf8.h>
 #include <fty_log.h>
+#include <cxxtools/jsondeserializer.h>
 
-namespace MlmUtils {
-
-std::map<std::string, std::string> zhash_to_map(zhash_t* hash)
-{
-    std::map<std::string, std::string> map;
-    char*                              item = static_cast<char*>(zhash_first(hash));
-    while (item) {
-        const char* key = zhash_cursor(hash);
-        const char* val = static_cast<const char*>(zhash_lookup(hash, key));
-        if (key && val)
-            map[key] = val;
-        item = static_cast<char*>(zhash_next(hash));
-    }
-    return map;
-}
-
-
-zhash_t* map_to_zhash(std::map<std::string, std::string> map_to_convert)
-{
-    zhash_t* hash = zhash_new();
-    for (auto& i : map_to_convert) {
-        zhash_insert(hash, i.first.c_str(), const_cast<char*>(i.second.c_str()));
-    }
-
-    return hash;
-}
-
-} // namespace MlmUtils
-
-#if 0
-void
-fty_common_mlm_utils_test (bool verbose)
+TEST_CASE("mlm utils")
 {
     /* These tests are here because:
      * - JSON used for communication inside the system is escaped before sending via ZMQ messages
@@ -69,9 +33,10 @@ fty_common_mlm_utils_test (bool verbose)
      * Failure of these tests may indicate a problem with fty-common library.
      */
     {
-        log_debug ("UTF8::escape: Test #1");
-        log_debug ("Validate whether the escaped string is a valid json using cxxtools::JsonDeserializer");
+        log_debug("UTF8::escape: Test #1");
+        log_debug("Validate whether the escaped string is a valid json using cxxtools::JsonDeserializer");
 
+        // clang-format off
         std::vector <std::pair <std::string, std::string>> tests {
             {"'jednoduche ' uvozovky'",                                     "'jednoduche ' uvozovky'"},
             {"'jednoduche '' uvozovky'",                                    "'jednoduche '' uvozovky'"},
@@ -131,85 +96,70 @@ fty_common_mlm_utils_test (bool verbose)
             // do not escape control chars yet
             //{"first second \n third\n\"\n \\n \\\\\"\f\\\t\\u\u0007\\\n fourth", R"(first second \\n third\\n\"\\n \\n \\\\\"\\f\\\\t\\u\u0007\\\\n fourth)"}
         };
+        // clang-format on
 
         for (auto const& item : tests) {
             std::string json;
-            std::string escaped = UTF8::escape (item.first);
+            std::string escaped = UTF8::escape(item.first);
 
-            json.assign("{ \"string\" : ").append ("\"").append (escaped).append ("\" }");
+            json.assign("{ \"string\" : ").append("\"").append(escaped).append("\" }");
 
-            std::stringstream input (json, std::ios_base::in);
-            cxxtools::JsonDeserializer deserializer (input);
+            std::stringstream           input(json, std::ios_base::in);
+            cxxtools::JsonDeserializer  deserializer(input);
             cxxtools::SerializationInfo si;
             // This is a bit crappy. We may either convert the full project
             // to C++ or otherwise keep C as pure C
             try {
-                deserializer.deserialize (si);
-            } catch (std::exception& e) {
+                deserializer.deserialize(si);
+            } catch (const std::exception& e) {
                 // This will generate a failure in case of exception
-                assert (0 == 1);
+                FAIL(e.what());
             }
         }
-        printf ("OK\n");
+        printf("OK\n");
     }
 
     {
-        log_debug ("UTF8::escape: Test #2");
-        log_debug ("Construct json, read back, compare.");
+        log_debug("UTF8::escape: Test #2");
+        log_debug("Construct json, read back, compare.");
 
         // a valid json { key : utils::json::escape (<string> } is constructed,
         // fed into cxxtools::JsonDeserializer (), read back and compared
 
-        std::vector <std::string> tests_reading{
-            {"newline in \n text \n\"\n times two"},
-            {"x\tx"},
-            {"x\\tx"},
-            {"x\\\tx"},
-            {"x\\\\tx"},
-            {"x\\\\\tx"},
-            {"x\\\\\\tx"},
-            {"x\\\\\\\tx"},
-            {"x\\Ꙫ\uA66A\n \\nx"},
-            {"sdf\ndfg\n\\\n\\\\\n\b\tasd \b f\\bdfg"},
+        std::vector<std::string> tests_reading{
+            {"newline in \n text \n\"\n times two"}, {"x\tx"}, {"x\\tx"}, {"x\\\tx"}, {"x\\\\tx"}, {"x\\\\\tx"},
+            {"x\\\\\\tx"}, {"x\\\\\\\tx"}, {"x\\Ꙫ\uA66A\n \\nx"}, {"sdf\ndfg\n\\\n\\\\\n\b\tasd \b f\\bdfg"},
             // do not escape control chars yet
             //{"first second \n third\n\"\n \\n \\\\\"\f\\\t\\u\u0007\\\n fourth"}
         };
 
         for (auto const& it : tests_reading) {
             std::string json;
-            json.assign("{ \"read\" : ").append ("\"").append (UTF8::escape (it)).append ("\" }");
+            json.assign("{ \"read\" : ").append("\"").append(UTF8::escape(it)).append("\" }");
 
-            std::stringstream input (json, std::ios_base::in);
-            cxxtools::JsonDeserializer deserializer (input);
+            std::stringstream           input(json, std::ios_base::in);
+            cxxtools::JsonDeserializer  deserializer(input);
             cxxtools::SerializationInfo si;
             // This is a bit crappy. We may either convert the full project
             // to C++ or otherwise keep C as pure C
             try {
-                deserializer.deserialize (si);
+                deserializer.deserialize(si);
             } catch (std::exception& e) {
                 // This will generate a failure in case of exception
-                assert (0 == 1);
+                FAIL(e.what());
             }
 
             std::string read;
-            si.getMember ("read") >>= read;
-/*  TODO: feel free to fix this
-            CAPTURE (read);
-            CAPTURE (it);
-            assert ( read.compare (it) == 0 );
-*/
+            si.getMember("read") >>= read;
+            /*  TODO: feel free to fix this
+                        CAPTURE (read);
+                        CAPTURE (it);
+                        assert ( read.compare (it) == 0 );
+            */
         }
-        printf ("OK\n");
+        printf("OK\n");
     }
 
-    printf ("fty-common-mlm-utils OK\n");
+    printf("fty-common-mlm-utils OK\n");
 }
 
-std::string zmsg_popstring(zmsg_t *resp){
-    char *popstr = zmsg_popstr (resp);
-    //copies the null-terminated character sequence (C-string) pointed by popstr
-    std::string string_rv = popstr;
-    zstr_free (&popstr);
-    return string_rv;
-}
-#endif
