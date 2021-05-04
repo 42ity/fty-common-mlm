@@ -31,6 +31,7 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <signal.h>
 
 
 namespace MlmSubprocess {

@@ -36,6 +36,7 @@ etn_target(shared ${PROJECT_NAME}
         fty_common_mlm_sync_client.cc
         fty_common_mlm_utils.cc
         fty_common_mlm_zconfig.cc
+    FLAGS -Wno-logical-op
     USES
         czmq
         cxxtools
