@@ -28,6 +28,7 @@
 
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
+#include "fty_common_mlm_pool.h"
 
 MlmClientPool mlm_pool{20};
 

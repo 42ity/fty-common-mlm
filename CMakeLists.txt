@@ -26,6 +26,7 @@ etn_target(shared ${PROJECT_NAME}
         fty_common_mlm_sync_client.h
         fty_common_mlm_utils.h
         fty_common_mlm_zconfig.h
+        fty_common_mlm_pool.h
     SOURCES
         fty_common_mlm_agent.cc
         fty_common_mlm_subprocess.cc

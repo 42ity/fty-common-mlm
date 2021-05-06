@@ -24,7 +24,6 @@
 // Original idea of using cxxtools::Pool of mlm_client_t* connections
 // by Michal Hrusecky <michal@hrusecky.net>
 
-#include <cxxtools/pool.h>
 #include <fty_log.h>
 #include <malamute.h>
 #include <memory>
@@ -65,7 +64,3 @@ private:
     zuuid_t*      _uuid;
     zpoller_t*    _poller;
 };
-
-typedef cxxtools::Pool<MlmClient> MlmClientPool;
-
-extern MlmClientPool mlm_pool;
