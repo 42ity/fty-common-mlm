@@ -46,7 +46,6 @@ typedef struct _fty_common_mlm_basic_mailbox_server_t fty_common_mlm_basic_mailb
 #include "fty_common_mlm_basic_mailbox_server.h"
 #include "fty_common_mlm_guards.h"
 #include "fty_common_mlm_stream_client.h"
-#include "fty_common_mlm_subprocess.h"
 #include "fty_common_mlm_sync_client.h"
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"

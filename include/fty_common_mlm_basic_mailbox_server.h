@@ -22,7 +22,7 @@
 #pragma once
 
 #include "fty_common_mlm_agent.h"
-#include "fty_common_sync_server.h"
+#include <fty_common_sync_server.h>
 #include <string>
 
 
