@@ -11,27 +11,30 @@ class Pool
 public:
     class Ptr
     {
-        ObjectType* m_object = nullptr;
-        Pool*       m_pool   = nullptr;
+        friend class Pool;
+
+        std::unique_ptr<ObjectType> m_object = nullptr;
+        Pool*                       m_pool   = nullptr;
 
         void doUnlink()
         {
-            if (m_pool == nullptr || !m_pool->put(*this)) {
-                delete m_object;
+            if (m_pool) {
+                m_pool->put(*this);
             }
         }
 
     public:
-        Ptr() = default;
-
-        Ptr(ObjectType* ptr)
-            : m_object(ptr)
+        Ptr(std::unique_ptr<ObjectType>&& ptr, Pool* pool)
+            : m_object(std::move(ptr))
+            , m_pool(pool)
         {
         }
 
-        Ptr(const Ptr& ptr)
-            : m_object(ptr.m_object)
-            , m_pool(ptr.m_pool)
+        Ptr(const Ptr& ptr) = delete;
+
+        Ptr(Ptr&& ptr)
+            : m_object(std::move(ptr.m_object))
+            , m_pool(std::move(ptr.m_pool))
         {
         }
 
@@ -40,24 +43,25 @@ public:
             doUnlink();
         }
 
-        Ptr& operator=(const Ptr& ptr)
+        Ptr& operator=(const Ptr& ptr) = delete;
+        Ptr& operator=(Ptr&& ptr)
         {
             if (m_object != ptr.m_object) {
                 doUnlink();
-                m_object = ptr.m_object;
-                m_pool   = ptr.m_pool;
+                m_object = std::move(ptr.m_object);
+                m_pool   = std::move(ptr.m_pool);
             }
             return *this;
         }
 
         ObjectType* operator->() const
         {
-            return m_object;
+            return m_object.get();
         }
 
         ObjectType& operator*() const
         {
-            return *m_object;
+            return *m_object.get();
         }
 
         bool operator==(const ObjectType* p) const
@@ -67,7 +71,7 @@ public:
 
         bool operator!=(const ObjectType* p) const
         {
-            return m_object != p;
+            return m_object.get() != p;
         }
 
         bool operator<(const ObjectType* p) const
@@ -85,24 +89,14 @@ public:
             return m_object != 0;
         }
 
-        ObjectType* getPointer()
-        {
-            return m_object;
-        }
-
-        const ObjectType* getPointer() const
-        {
-            return m_object;
-        }
-
         operator ObjectType*()
         {
-            return m_object;
+            return m_object.get();
         }
 
         operator const ObjectType*() const
         {
-            return m_object;
+            return m_object.get();
         }
 
         void setPool(Pool* p)
@@ -114,10 +108,20 @@ public:
         {
             m_pool = nullptr;
         }
+
+        ObjectType* getPointer()
+        {
+            return m_object.get();
+        }
+
+        const ObjectType* getPointer() const
+        {
+            return m_object.get();
+        }
     };
 
 private:
-    using Container = std::vector<Ptr>;
+    using Container = std::vector<std::unique_ptr<ObjectType>>;
 
     Container          m_freePool;
     unsigned           m_maxSpare;
@@ -128,7 +132,7 @@ private:
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_maxSpare == 0 || m_freePool.size() < m_maxSpare) {
             po.setPool(nullptr);
-            m_freePool.push_back(po);
+            m_freePool.emplace_back(std::move(po.m_object));
             return true;
         }
 
@@ -150,16 +154,16 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        Ptr po;
         if (m_freePool.empty()) {
-            po = Ptr();
+            return Ptr(std::make_unique<ObjectType>(), this);
         } else {
-            po = m_freePool.back();
-            m_freePool.pop_back();
+            auto getter = [this]() {
+                auto it = std::move(m_freePool.back());
+                m_freePool.pop_back();
+                return it;
+            };
+            return Ptr(std::move(getter()), this);
         }
-
-        po.setPool(this);
-        return po;
     }
 
     void drop(unsigned keep = 0)
