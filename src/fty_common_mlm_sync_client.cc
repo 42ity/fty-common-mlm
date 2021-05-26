@@ -27,14 +27,21 @@
 */
 
 #include "fty_common_mlm_sync_client.h"
+#include <gnu/libc-version.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+// gettid() is available since glibc 2.30
+#if ((__GLIBC__ < 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 30))
+#include <sys/syscall.h>
+#define gettid() pid_t(syscall(SYS_gettid))
+#endif
+
 #include <czmq.h>
 #include <fty_common_mlm.h>
-#include <gnu/libc-version.h>
 #include <iomanip>
 #include <malamute.h>
 #include <sstream>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace mlm {
 MlmSyncClient::MlmSyncClient(
