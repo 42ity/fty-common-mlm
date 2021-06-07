@@ -1,6 +1,5 @@
 #pragma once
 #include "fty_common_mlm_tntmlm.h"
-#include <cxxtools/pool.h>
 #include <mutex>
 
 namespace details {
