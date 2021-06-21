@@ -17,7 +17,6 @@ etn_target(shared ${PROJECT_NAME}
     PUBLIC
         fty_common_mlm_agent.h
         fty_common_mlm_guards.h
-        fty_common_mlm_subprocess.h
         fty_common_mlm_tntmlm.h
         fty_common_mlm_uuid.h
         fty_common_mlm_basic_mailbox_server.h
@@ -29,7 +28,6 @@ etn_target(shared ${PROJECT_NAME}
         fty_common_mlm_pool.h
     SOURCES
         fty_common_mlm_agent.cc
-        fty_common_mlm_subprocess.cc
         fty_common_mlm_tntmlm.cc
         fty_common_mlm_uuid.cc
         fty_common_mlm_basic_mailbox_server.cc
@@ -40,11 +38,11 @@ etn_target(shared ${PROJECT_NAME}
     FLAGS -Wno-logical-op
     USES
         czmq
-        cxxtools
         fty_common
         fty_common_logging
         mlm
         openssl
+        pthread
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
@@ -56,13 +54,13 @@ etn_test_target(${PROJECT_NAME}
         test/conf/test.conf
     SOURCES
         test/basic_mailbox_server.cc
-        test/subprocess.cc
         test/tntmlm.cc
         test/utils.cc
         test/uuid.cc
         test/main.cpp
     USES
         pthread
+        cxxtools
     SUBDIR
         test
 )

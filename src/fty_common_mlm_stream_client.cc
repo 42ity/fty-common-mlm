@@ -34,7 +34,7 @@
 // gettid() is available since glibc 2.30
 #if ((__GLIBC__ < 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 30))
 #include <sys/syscall.h>
-#define gettid() syscall(SYS_gettid)
+#define gettid() pid_t(syscall(SYS_gettid))
 #endif
 
 #include <czmq.h>
