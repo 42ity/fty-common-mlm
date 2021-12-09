@@ -68,3 +68,32 @@ TEST_CASE("Basic mailbox server")
 
     printf("Ok\n");
 }
+
+TEST_CASE("Basic mailbox server with timeout")
+{
+    printf(" * fty_common_mlm_basic_mailbox_server: ");
+
+    zactor_t* broker = zactor_new(mlm_server, const_cast<char*>("Malamute"));
+    zstr_sendx(broker, "BIND", testEndpoint, NULL);
+    zstr_send(broker, "VERBOSE");
+
+    // create a client
+    {
+        mlm::MlmSyncClient syncClient("test_client", testAgentName, 1000, testEndpoint);
+
+        fty::Payload expectedPayload = {"This", "is", "a", "test"};
+
+        bool isExeption = false;
+        try {
+            // send request without server for response (timeout of 10 sec by default)
+            fty::Payload receivedPayload = syncClient.syncRequestWithReply(expectedPayload);
+        }
+        catch (std::exception& e) {
+           isExeption = true;
+        }
+        CHECK(isExeption);
+    }
+    zactor_destroy(&broker);
+
+    printf("Ok\n");
+}
