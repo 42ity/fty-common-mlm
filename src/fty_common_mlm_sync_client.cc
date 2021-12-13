@@ -53,7 +53,7 @@ MlmSyncClient::MlmSyncClient(
 {
 }
 
-
+// TODO: Add input parameter for timeout
 std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<std::string>& payload)
 {
     mlm_client_t* client = mlm_client_new();
@@ -83,7 +83,6 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     ZuuidGuard zuuid(zuuid_new());
     zmsg_addstr(request, zuuid_str_canonical(zuuid));
 
-
     // add all the payload
     for (const std::string& frame : payload) {
         zmsg_addstr(request, frame.c_str());
@@ -96,16 +95,37 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     }
 
     // send the message
-    mlm_client_sendto(client, m_destination.c_str(), "REQUEST", nullptr, m_timeout, &request);
+    int rv = mlm_client_sendto(client, m_destination.c_str(), "REQUEST", nullptr, m_timeout, &request);
+    if (rv != 0) {
+        zmsg_destroy(&request);
+        mlm_client_destroy(&client);
+        throw std::runtime_error("Malamute error: Cannot send message");
+    }
+    zmsg_destroy(&request);  // secure
 
     if (zsys_interrupted) {
-        zmsg_destroy(&request);
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: zsys_interrupted");
     }
 
     // Get the reply
-    ZmsgGuard recv(mlm_client_recv(client));
+    ZmsgGuard recv;
+    zpoller_t *poller = zpoller_new(mlm_client_msgpipe(client), nullptr);
+    // timeout of 10 sec
+    zsock_t *which = static_cast<zsock_t *>(zpoller_wait(poller, 10000));
+
+    if (zsys_interrupted) {
+        mlm_client_destroy(&client);
+        throw std::runtime_error("Malamute error: zsys_interrupted");
+    }
+
+    if (which == mlm_client_msgpipe(client)) {
+        recv = mlm_client_recv(client);
+    }
+    else {
+       mlm_client_destroy(&client);
+       throw std::runtime_error("Malamute error: Timeout when read response");
+    }
     mlm_client_destroy(&client);
 
     // Get number of frame all the frame
