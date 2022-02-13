@@ -114,6 +114,9 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     // timeout of 10 sec
     zsock_t *which = static_cast<zsock_t *>(zpoller_wait(poller, 10000));
 
+    //remove the pooler
+    zpoller_destroy(&poller);
+
     if (zsys_interrupted) {
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: zsys_interrupted");
