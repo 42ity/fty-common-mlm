@@ -17,13 +17,6 @@
     =========================================================================
 */
 
-/*
-@header
-    fty_common_common_fty_uuid - Calculates UUID for assets.
-@discuss
-@end
-*/
-
 #include "fty_common_mlm_zconfig.h"
 #include <catch2/catch.hpp>
 #include <czmq.h>
