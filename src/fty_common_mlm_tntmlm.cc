@@ -47,9 +47,6 @@ MlmClient::~MlmClient()
     zuuid_destroy(&_uuid);
     zpoller_destroy(&_poller);
     mlm_client_destroy(&_client);
-    // if (NULL != _uuid) zuuid_destroy (&_uuid);
-    // if (NULL != _poller) zpoller_destroy (&_poller);
-    // if (NULL != _client) mlm_client_destroy (&_client);
 }
 
 zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout)
