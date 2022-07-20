@@ -57,6 +57,7 @@ etn_test_target(${PROJECT_NAME}
         test/tntmlm.cc
         test/utils.cc
         test/uuid.cc
+        test/zconfig.cc
         test/main.cpp
     USES
         pthread
