@@ -64,7 +64,6 @@ MlmStreamClient::~MlmStreamClient()
     }
 }
 
-
 void MlmStreamClient::publish(const std::vector<std::string>& payload)
 {
     publishOnBus("MESSAGE", payload);
@@ -72,6 +71,10 @@ void MlmStreamClient::publish(const std::vector<std::string>& payload)
 
 void MlmStreamClient::publishOnBus(const std::string& type, const std::vector<std::string>& payload)
 {
+    if (zsys_interrupted) {
+        return;
+    }
+
     // std::cerr << "Publish on Bus <" << messageType << ">:" << payload << std::endl;
 
     mlm_client_t* client = mlm_client_new();
@@ -110,13 +113,12 @@ void MlmStreamClient::publishOnBus(const std::string& type, const std::vector<st
 
     rc = mlm_client_send(client, type.c_str(), &notification);
 
+    zmsg_destroy(&notification);
+    mlm_client_destroy(&client);
+
     if (rc != 0) {
-        zmsg_destroy(&notification);
-        mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: Impossible to publish on stream <" + m_stream + ">");
     }
-
-    mlm_client_destroy(&client);
 }
 
 uint32_t MlmStreamClient::subscribe(Callback callback)
@@ -152,7 +154,6 @@ void MlmStreamClient::unsubscribe(uint32_t subId)
             m_callbacks.erase(subId);
         }
 
-
         if (m_callbacks.empty()) {
             m_stopRequested = true;
             publishOnBus("SYNC", {});
@@ -163,9 +164,11 @@ void MlmStreamClient::unsubscribe(uint32_t subId)
 
 void MlmStreamClient::listener()
 {
-    mlm_client_t* client = mlm_client_new();
+    mlm_client_t* client = NULL;
+    zpoller_t* poller = NULL;
 
     try {
+        client = mlm_client_new();
         if (client == nullptr) {
             throw std::runtime_error("Malamute error: NULL client pointer");
         }
@@ -190,28 +193,39 @@ void MlmStreamClient::listener()
             throw std::runtime_error("Malamute error: Impossible to become consumer of stream <" + m_stream + ">");
         }
 
-        zpoller_t* poller = zpoller_new(mlm_client_msgpipe(client), NULL);
+        poller = zpoller_new(mlm_client_msgpipe(client), NULL);
+        if (!poller) {
+            throw std::runtime_error("Malamute error: Error creating poller");
+        }
 
         m_listenerStarted.notify_all();
 
+        const int poller_timeout = 1000; //ms
+
         while (!zsys_interrupted) {
-            void* which = zpoller_wait(poller, -1);
+            void* which = zpoller_wait(poller, poller_timeout);
+
+            if (which == nullptr) {
+                if (zpoller_terminated(poller) || zsys_interrupted) {
+                    break;
+                }
+            }
+
+            // check if we need to leave the loop
+            if (m_stopRequested) {
+                break;
+            }
+
             if (which == mlm_client_msgpipe(client)) {
                 ZmsgGuard msg(mlm_client_recv(client));
 
-                // check if we need to leave the loop
-                if (m_stopRequested) {
-                    break;
-                }
-
-
-                // collect all the frame
-                size_t numberOfFrame = zmsg_size(msg);
-
                 std::vector<std::string> payload;
-                for (size_t index = 0; index < numberOfFrame; index++) {
+                while(true) {
                     ZstrGuard frame(zmsg_popstr(msg));
-                    payload.push_back(frame.get());
+                    if (!frame) {
+                        break;
+                    }
+                    payload.push_back(std::string{frame});
                 }
 
                 // process the callbacks
@@ -226,16 +240,15 @@ void MlmStreamClient::listener()
                 }
             }
         }
-
-        zpoller_destroy(&poller);
-
-    } catch (...) // Transfer the error to the main thread (only at startup)
+    }
+    catch (...) // Transfer the error to the main thread (only at startup)
     {
         // log_error("Error during starting the listener thread");
         m_exPtr = std::current_exception();
         m_listenerStarted.notify_all();
     }
 
+    zpoller_destroy(&poller);
     mlm_client_destroy(&client);
 }
 

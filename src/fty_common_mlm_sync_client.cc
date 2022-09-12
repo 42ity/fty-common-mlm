@@ -79,8 +79,8 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     }
 
     // Prepare the request:
-    zmsg_t*    request = zmsg_new();
     ZuuidGuard zuuid(zuuid_new());
+    zmsg_t* request = zmsg_new();
     zmsg_addstr(request, zuuid_str_canonical(zuuid));
 
     // add all the payload
@@ -96,12 +96,11 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
 
     // send the message
     int rv = mlm_client_sendto(client, m_destination.c_str(), "REQUEST", nullptr, m_timeout, &request);
+    zmsg_destroy(&request); // secure
     if (rv != 0) {
-        zmsg_destroy(&request);
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: Cannot send message");
     }
-    zmsg_destroy(&request);  // secure
 
     if (zsys_interrupted) {
         mlm_client_destroy(&client);
@@ -110,46 +109,41 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
 
     // Get the reply
     ZmsgGuard recv;
-    zpoller_t *poller = zpoller_new(mlm_client_msgpipe(client), nullptr);
-    // timeout of 10 sec
-    zsock_t *which = static_cast<zsock_t *>(zpoller_wait(poller, 10000));
+    {
+        int recv_timeout = 10000; //10 s.
+        zpoller_t *poller = zpoller_new(mlm_client_msgpipe(client), nullptr);
+        void* which = poller ? zpoller_wait(poller, recv_timeout) : nullptr;
+        zpoller_destroy(&poller);
 
-    //remove the pooler
-    zpoller_destroy(&poller);
+        if (zsys_interrupted) {
+            mlm_client_destroy(&client);
+            throw std::runtime_error("Malamute error: zsys_interrupted");
+        }
 
-    if (zsys_interrupted) {
-        mlm_client_destroy(&client);
-        throw std::runtime_error("Malamute error: zsys_interrupted");
-    }
+        if (which != mlm_client_msgpipe(client)) {
+           mlm_client_destroy(&client);
+           throw std::runtime_error("Malamute error: Timeout when read response");
+        }
 
-    if (which == mlm_client_msgpipe(client)) {
         recv = mlm_client_recv(client);
     }
-    else {
-       mlm_client_destroy(&client);
-       throw std::runtime_error("Malamute error: Timeout when read response");
-    }
-    mlm_client_destroy(&client);
 
-    // Get number of frame all the frame
-    size_t numberOfFrame = zmsg_size(recv);
+    mlm_client_destroy(&client); // useless
 
-    if (numberOfFrame == 0) {
-        throw std::runtime_error("Malamute error: No correlation id");
+    // Check the message uid (1st frame)
+    ZstrGuard recv_uuid(zmsg_popstr(recv));
+    if (!recv_uuid || !streq(recv_uuid, zuuid_str_canonical(zuuid))) {
+        throw std::runtime_error("Malamute error: Missing or Mismatch correlation id");
     }
 
-    // Check the message
-    ZstrGuard str(zmsg_popstr(recv));
-    if (!streq(str, zuuid_str_canonical(zuuid))) {
-        throw std::runtime_error("Malamute error: Mismatch correlation id");
-    }
-
+    // Unstack all the other frames
     std::vector<std::string> receivedFrames;
-
-    // we unstack all the other frame starting by the 1st one.
-    for (size_t index = 1; index < numberOfFrame; index++) {
+    while (true) {
         ZstrGuard frame(zmsg_popstr(recv));
-        receivedFrames.push_back(std::string(frame.get()));
+        if (!frame) {
+            break;
+        }
+        receivedFrames.push_back(std::string{frame});
     }
 
     return receivedFrames;

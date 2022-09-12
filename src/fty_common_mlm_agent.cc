@@ -31,22 +31,21 @@
 #include <fty_log.h>
 #include <stdexcept>
 
-
 namespace mlm {
 MlmAgent::~MlmAgent()
 {
-    mlm_client_destroy(&m_client);
     zpoller_destroy(&m_defaultZpoller);
+    mlm_client_destroy(&m_client);
 }
 
 MlmAgent::MlmAgent(zsock_t* pipe, const char* endpoint, const char* address, int pollerTimeout, int connectionTimeout)
     : m_client(mlm_client_new())
+    , m_address(address ? address : "")
     , m_pipe(pipe)
     , m_lastTick(zclock_mono())
     , m_pollerTimeout(pollerTimeout)
     , m_defaultZpoller(nullptr)
 {
-
     if (!m_client) {
         log_error("mlm_client_new() failed.");
         throw std::runtime_error("Can't create client");
@@ -58,7 +57,7 @@ MlmAgent::MlmAgent(zsock_t* pipe, const char* endpoint, const char* address, int
 
 void MlmAgent::connect(const char* endpoint, const char* address, int connectionTimeout)
 {
-    log_debug("endpoint: %s", endpoint);
+    logDebug("{} endpoint: {}", m_address, (endpoint ? endpoint : "<null>"));
     if (mlm_client_connect(m_client, endpoint, uint32_t(connectionTimeout), address) == -1) {
         log_error("mlm_client_connect(endpoint = '%s', timeout = '%d', address = '%s') failed.", endpoint,
             connectionTimeout, address);
@@ -66,19 +65,26 @@ void MlmAgent::connect(const char* endpoint, const char* address, int connection
     }
 }
 
-
 void MlmAgent::mainloop()
 {
+    logDebug("{} actor started", m_address);
+
     zsock_signal(m_pipe, 0);
-    log_debug("actor ready");
 
     while (!zsys_interrupted) {
         void* which = zpoller_wait(zpoller(), m_pollerTimeout);
 
+        if (which == nullptr) {
+            if (zpoller_terminated(zpoller()) || zsys_interrupted) {
+                logDebug("{} interrupted", m_address);
+                break;
+            }
+        }
+
         // Handle periodic callback hook
         if (m_pollerTimeout > 0) {
             int64_t curClock = zclock_mono();
-            if (m_lastTick + m_pollerTimeout < curClock) {
+            if ((m_lastTick + m_pollerTimeout) < curClock) {
                 if (!tick()) {
                     break;
                 }
@@ -89,16 +95,17 @@ void MlmAgent::mainloop()
         if (which == m_pipe) {
             ZmsgGuard message(zmsg_recv(m_pipe));
             if (message == nullptr) {
-                log_debug("interrupted");
+                logDebug("{} interrupted", m_address);
                 break;
             }
             if (!handlePipe(message.get())) {
                 break;
             }
-        } else if (which == mlm_client_msgpipe(m_client)) {
+        }
+        else if (which == mlm_client_msgpipe(m_client)) {
             ZmsgGuard message(mlm_client_recv(m_client));
             if (message == nullptr) {
-                log_debug("interrupted");
+                logDebug("{} interrupted", m_address);
                 break;
             } else if (streq(mlm_client_command(m_client), "MAILBOX DELIVER")) {
                 if (!handleMailbox(message.get())) {
@@ -112,10 +119,11 @@ void MlmAgent::mainloop()
                 log_warning("Unknown malamute pattern: '%s'. Message subject: '%s', sender: '%s'.",
                     mlm_client_command(m_client), mlm_client_subject(m_client), mlm_client_sender(m_client));
             }
-        } else if (which != nullptr) {
+        }
+        else if (which != nullptr) {
             ZmsgGuard message(zmsg_recv(which));
             if (message == nullptr) {
-                log_debug("interrupted");
+                logDebug("{} interrupted", m_address);
                 break;
             }
             if (!handleOther(message.get(), which)) {
@@ -123,6 +131,8 @@ void MlmAgent::mainloop()
             }
         }
     }
+
+    logInfo("{} actor ended", m_address);
 }
 
 bool MlmAgent::handlePipe(zmsg_t* message)
