@@ -31,7 +31,6 @@ static const char* testAgentName = "fty_common_mlm_basic_mailbox_server_test";
 
 static void fty_common_mlm_basic_mailbox_server_test_actor(zsock_t* pipe, void* /*args*/)
 {
-
     fty::EchoServer server;
 
     mlm::MlmBasicMailboxServer agent(pipe, server, testAgentName, testEndpoint);
@@ -71,7 +70,7 @@ TEST_CASE("Basic mailbox server")
 
 TEST_CASE("Basic mailbox server with timeout")
 {
-    printf(" * fty_common_mlm_basic_mailbox_server: ");
+    printf(" * fty_common_mlm_basic_mailbox_server with timeout: ");
 
     zactor_t* broker = zactor_new(mlm_server, const_cast<char*>("Malamute"));
     zstr_sendx(broker, "BIND", testEndpoint, NULL);
@@ -83,16 +82,18 @@ TEST_CASE("Basic mailbox server with timeout")
 
         fty::Payload expectedPayload = {"This", "is", "a", "test"};
 
-        bool isExeption = false;
+        bool isException = false;
         try {
             // send request without server for response (timeout of 10 sec by default)
             fty::Payload receivedPayload = syncClient.syncRequestWithReply(expectedPayload);
         }
-        catch (std::exception& e) {
-           isExeption = true;
+        catch (const std::exception& e) {
+           printf("Std exception: %s\n", e.what());
+           isException = true;
         }
-        CHECK(isExeption);
+        CHECK(isException);
     }
+
     zactor_destroy(&broker);
 
     printf("Ok\n");

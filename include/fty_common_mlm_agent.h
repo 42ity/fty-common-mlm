@@ -23,6 +23,7 @@
 
 #include <czmq.h>
 #include <exception>
+#include <string>
 #include <malamute.h>
 
 namespace mlm {
@@ -141,13 +142,13 @@ protected:
         return m_pipe;
     }
 
-
 private:
-    mlm_client_t* m_client;
-    zsock_t*      m_pipe;
+    mlm_client_t* m_client{nullptr};
+    std::string   m_address;
+    zsock_t*      m_pipe{nullptr};
     int64_t       m_lastTick;
     int           m_pollerTimeout;
-    zpoller_t*    m_defaultZpoller;
+    zpoller_t*    m_defaultZpoller{nullptr};
 };
 
 } // namespace mlm
