@@ -39,28 +39,29 @@ public:
 
     // timeout <0, 300> seconds, greater number trimmed
     // based on specified uuid returns expected message or NULL on expire/interrupt
-    virtual zmsg_t* recv(const std::string& uuid, uint32_t timeout);
+    virtual zmsg_t* recv(const std::string& uuid, uint32_t timeout_s);
 
     // implements request reply pattern
     // method prepends two frames
-    zmsg_t* requestreply(const std::string& address, const std::string& subject, uint32_t timeout, zmsg_t** content_p);
-    virtual int sendto(const std::string& address, const std::string& subject, uint32_t timeout, zmsg_t** content_p);
-    bool        connected()
+    zmsg_t* requestreply(const std::string& address, const std::string& subject, uint32_t timeout_s, zmsg_t** content_p);
+    virtual int sendto(const std::string& address, const std::string& subject, uint32_t timeout_s, zmsg_t** content_p);
+
+    bool connected()
     {
-        return mlm_client_connected(_client);
+        return _client ? mlm_client_connected(_client) : false;
     }
     const char* subject()
     {
-        return mlm_client_subject(_client);
+        return _client ? mlm_client_subject(_client) : NULL;
     }
     const char* sender()
     {
-        return mlm_client_sender(_client);
+        return _client ? mlm_client_sender(_client) : NULL;
     }
 
 private:
-    void          connect();
-    mlm_client_t* _client;
-    zuuid_t*      _uuid;
-    zpoller_t*    _poller;
+    bool           connect();
+    mlm_client_t* _client{nullptr};
+    zuuid_t*      _uuid{nullptr};
+    zpoller_t*    _poller{nullptr};
 };
