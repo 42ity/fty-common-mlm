@@ -21,13 +21,11 @@
 
 #pragma once
 
-// Original idea of using cxxtools::Pool of mlm_client_t* connections
-// by Michal Hrusecky <michal@hrusecky.net>
-
-#include <fty_log.h>
+#include <czmq.h>
 #include <malamute.h>
-#include <memory>
 #include <string>
+#include <vector>
+#include <memory>
 
 class MlmClient
 {
@@ -60,8 +58,11 @@ public:
     }
 
 private:
-    bool           connect();
+    bool connect();
+
+private:
     mlm_client_t* _client{nullptr};
     zuuid_t*      _uuid{nullptr};
     zpoller_t*    _poller{nullptr};
+    std::string   _clientAddressPrefix{"rest."};
 };

@@ -21,7 +21,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <czmq.h>
 #include <map>
 #include <string>
@@ -37,11 +36,4 @@ std::map<std::string, std::string> zhash_to_map(zhash_t* hash);
 // convert map to zhash_t and take responsobility for destorying it
 zhash_t* map_to_zhash(std::map<std::string, std::string> map_to_convert);
 
-/** \brief do a memory clean zmsg_popstr call
- *   \return a std::string object
- */
-std::string zmsg_popstring(zmsg_t* resp);
-
 } // namespace MlmUtils
-
-#endif
