@@ -19,18 +19,237 @@
     =========================================================================
 */
 
-#include "fty_common_mlm_pool.h"
 #include "fty_common_mlm_utils.h"
+#include "fty_common_mlm_tntmlm.h"
+#include "fty_common_mlm_pool.h"
+#include <fty_log.h>
 #include <catch2/catch.hpp>
 
-TEST_CASE("mlm tntmlm")
+#define TEST_SERVER_HELLO_RESPONSE "i'm here"
+
+static void tntmlm_test_server(zsock_t* pipe, void* args)
+{
+    const char* serverAddress = static_cast<char*>(args);
+    log_debug("%s: Starting...", serverAddress);
+
+    mlm_client_t* mlm = mlm_client_new();
+    zpoller_t* poller = zpoller_new(pipe, mlm_client_msgpipe(mlm), NULL);
+    zsock_signal(pipe, 0);
+
+    log_debug("%s: Started", serverAddress);
+
+    // actor msg loop
+    while (!zsys_interrupted) {
+        void* which = zpoller_wait(poller, 1000);
+        // No Rx
+        if (!which) {
+            if (zpoller_terminated(poller) || zsys_interrupted) {
+                break;
+            }
+        }
+        // Rx on pipe socket
+        else if (which == pipe) {
+            zmsg_t* msg = zmsg_recv(pipe);
+            char* cmd = zmsg_popstr(msg);
+            log_debug("%s: Rx pipe command '%s'", serverAddress, cmd);
+            bool term = false;
+            if (streq(cmd, "$TERM")) {
+                term = true;
+            }
+            else if (streq(cmd, "CONNECT")) {
+                char* endpoint = zmsg_popstr(msg);
+                if (endpoint) {
+                    int r = mlm_client_connect(mlm, endpoint, 5000, serverAddress);
+                    if (r == -1) {
+                        log_error("%s: CONNECT '%s' failed", serverAddress, endpoint);
+                    }
+                    else {
+                        log_debug("%s: CONNECT '%s'", serverAddress, endpoint);
+                    }
+                }
+                else {
+                    log_error("%s: Missing endpoint", serverAddress);
+                }
+                zstr_free(&endpoint);
+            }
+            zstr_free(&cmd);
+            zmsg_destroy(&msg);
+            if (term) {
+                break;
+            }
+        }
+        // Rx on client socket
+        else if (which == mlm_client_msgpipe(mlm)) {
+            zmsg_t* msg = mlm_client_recv(mlm);
+            const char* cmd = mlm_client_command(mlm);
+            const char* subject = mlm_client_subject(mlm);
+            const char* sender = mlm_client_sender(mlm);
+
+            log_debug("%s: Rx %s/%s from %s", serverAddress, cmd, subject, sender);
+
+            if (streq(cmd, "MAILBOX DELIVER")) {
+                char* req = zmsg_popstr(msg); // enforced request
+                char* uuid = zmsg_popstr(msg);
+
+                log_debug("%s: Rx req: '%s', uuid: '%s'", serverAddress, req, uuid);
+
+                if (req && uuid && streq(req, "REQUEST")) {
+                    char* arg = zmsg_popstr(msg);
+
+                    log_debug("%s: Rx arg: '%s'", serverAddress, arg);
+
+                    if (arg && streq(arg, "hello")) {
+                        zmsg_t* reply = zmsg_new();
+                        zmsg_addstr(reply, uuid); // enforced reply
+                        zmsg_addstr(reply, "REPLY");
+                        zmsg_addstr(reply, TEST_SERVER_HELLO_RESPONSE);
+
+                        log_debug("%s: Reply to %s", serverAddress, sender);
+
+                        mlm_client_sendto(mlm, sender, subject, NULL, 1000, &reply);
+                        zmsg_destroy(&reply);
+                    }
+                    zstr_free(&arg);
+                }
+                zstr_free(&uuid);
+                zstr_free(&req);
+            }
+            zmsg_destroy(&msg);
+        }
+    }
+
+    zpoller_destroy(&poller);
+    mlm_client_destroy(&mlm);
+
+    log_debug("%s: Ended", serverAddress);
+}
+
+#define MLM_ENDPOINT_TEST "inproc://tntmlm-test"
+#define TEST_SERVER_ADDRESS "tntmlm_test_server"
+
+TEST_CASE("tntmlm client")
 {
     std::string& ref = const_cast<std::string&>(MlmClient::ENDPOINT);
-    ref              = "inproc://tntmlm-catch-1";
-    CHECK(MlmClient::ENDPOINT == "inproc://tntmlm-catch-1");
+    ref              = MLM_ENDPOINT_TEST;
+    CHECK(MlmClient::ENDPOINT == MLM_ENDPOINT_TEST);
+
+    zactor_t* server = zactor_new(mlm_server, const_cast<char*>("Malamute"));
+    REQUIRE(server);
+    zstr_sendx(server, "BIND", MlmClient::ENDPOINT.c_str(), nullptr);
+
+    zactor_t* tntmlm_test_actor = zactor_new(tntmlm_test_server, const_cast<char*>(TEST_SERVER_ADDRESS));
+    REQUIRE(tntmlm_test_actor);
+    zstr_sendx(tntmlm_test_actor, "CONNECT", MlmClient::ENDPOINT.c_str(), nullptr);
+
+    const char* agent1Address = "AGENT1";
+    mlm_client_t* agent1 = mlm_client_new();
+    REQUIRE(agent1);
+    mlm_client_connect(agent1, MlmClient::ENDPOINT.c_str(), 1000, agent1Address);
+
+    printf("\n ---- MlmClient ctor ----\n");
+    MlmClient* client = new MlmClient();
+    REQUIRE(client);
+    {
+        CHECK(client->connected() == true); // auto connect in ctor
+        CHECK(client->sender() == NULL);
+        CHECK(client->subject() == NULL);
+    }
+    printf("OK\n");
+
+    printf("\n ---- MlmClient sendto/recv ----\n");
+    {
+        {
+          zmsg_t* reply = client->recv("uuid1", 0);
+          CHECK(!reply);
+          reply = client->recv("uuid1", 1);
+          CHECK(!reply);
+        }
+
+        {
+          zmsg_t* msg = zmsg_new();
+          REQUIRE(msg);
+          zmsg_addstr(msg, "uuid-1234");
+          zmsg_addstr(msg, "hello");
+          zmsg_addstr(msg, "world");
+          int rv = client->sendto(agent1Address, "SUBJECT-HELLO", 1000, &msg);
+          CHECK(rv == 0);
+        }
+
+        {
+          zmsg_t* msg = mlm_client_recv(agent1);
+          REQUIRE(msg);
+          char* s0 = zmsg_popstr(msg);
+          char* s1 = zmsg_popstr(msg);
+          char* s2 = zmsg_popstr(msg);
+
+          CHECK(mlm_client_sender(agent1) != NULL);
+          CHECK(mlm_client_subject(agent1) != NULL);
+          CHECK(streq(mlm_client_subject(agent1), "SUBJECT-HELLO"));
+          CHECK((s0 && streq(s0, "uuid-1234")));
+          CHECK((s1 && streq(s1, "hello")));
+          CHECK((s2 && streq(s2, "world")));
+
+          zstr_free(&s0);
+          zstr_free(&s1);
+          zstr_free(&s2);
+          zmsg_destroy(&msg);
+        }
+    }
+    printf("OK\n");
+
+    printf("\n ---- MlmClient requestreply ----\n");
+    {
+        // -bad- hola request, msg consumed, no reply (timedout)
+        {
+            zmsg_t* msg = zmsg_new();
+            REQUIRE(msg);
+            zmsg_addstr(msg, "hola");
+            zmsg_t* reply = client->requestreply(TEST_SERVER_ADDRESS, "hola-request", 1, &msg);
+            CHECK(!msg);
+            CHECK(!reply);
+        }
+        // -good- hello request, msg consumed, reply expected
+        {
+            zmsg_t* msg = zmsg_new();
+            REQUIRE(msg);
+            zmsg_addstr(msg, "hello");
+            zmsg_t* reply = client->requestreply(TEST_SERVER_ADDRESS, "hello-request", 1, &msg);
+            CHECK(!msg);
+            CHECK(reply);
+            char* s0 = zmsg_popstr(reply);
+            CHECK((s0 && streq(s0, TEST_SERVER_HELLO_RESPONSE)));
+            zstr_free(&s0);
+            zmsg_destroy(&reply);
+        }
+    }
+
+    printf("\n ---- MlmClient dtor ----\n");
+    delete client;
+    printf("OK\n");
+
+    mlm_client_destroy(&agent1);
+    zactor_destroy(&tntmlm_test_actor);
+    zactor_destroy(&server);
+}
+
+TEST_CASE("tntmlm pool")
+{
+    std::string& ref = const_cast<std::string&>(MlmClient::ENDPOINT);
+    ref              = MLM_ENDPOINT_TEST;
+    CHECK(MlmClient::ENDPOINT == MLM_ENDPOINT_TEST);
 
     zactor_t* server = zactor_new(mlm_server, const_cast<char*>("Malamute"));
     zstr_sendx(server, "BIND", MlmClient::ENDPOINT.c_str(), nullptr);
+
+    zactor_t* tntmlm_test_actor = zactor_new(tntmlm_test_server, const_cast<char*>(TEST_SERVER_ADDRESS));
+    REQUIRE(tntmlm_test_actor);
+    zstr_sendx(tntmlm_test_actor, "CONNECT", MlmClient::ENDPOINT.c_str(), nullptr);
+
+    mlm_client_t* agent1 = mlm_client_new();
+    mlm_client_connect(agent1, MlmClient::ENDPOINT.c_str(), 1000, "AGENT1");
+
+    mlm_client_t* agent2 = mlm_client_new();
+    mlm_client_connect(agent2, MlmClient::ENDPOINT.c_str(), 1000, "AGENT2");
 
     { // Invariant: malamute MUST be destroyed last
 
@@ -38,18 +257,14 @@ TEST_CASE("mlm tntmlm")
         // for this test because valgrind will detect memory leak
         // which occurs because malamute server is destroyed only
         // after clients allocated in the pool of the header file
-        MlmClientPool mlm_pool_test{3};
+        const unsigned POOL_MAXSIZE = 3;
+        MlmClientPool mlm_pool_test{POOL_MAXSIZE};
 
-        mlm_client_t* agent1 = mlm_client_new();
-        mlm_client_connect(agent1, MlmClient::ENDPOINT.c_str(), 1000, "AGENT1");
-
-        mlm_client_t* agent2 = mlm_client_new();
-        mlm_client_connect(agent2, MlmClient::ENDPOINT.c_str(), 1000, "AGENT2");
-
+        CHECK(mlm_pool_test.getMaximumSize() == POOL_MAXSIZE);
+        CHECK(mlm_pool_test.size() == 0);
 
         printf("\n ---- max pool ----\n");
         {
-            CHECK(mlm_pool_test.getMaximumSize() == 3);
             MlmClientPool::Ptr ui_client = mlm_pool_test.get();
             CHECK(ui_client.getPointer() != NULL);
 
@@ -64,10 +279,11 @@ TEST_CASE("mlm tntmlm")
 
             MlmClientPool::Ptr ui_client5 = mlm_pool_test.get();
             CHECK(ui_client5.getPointer() != NULL);
+
+            printf("mlm_pool_test.getMaximumSize(): %u\n", mlm_pool_test.getMaximumSize());
+            printf("mlm_pool_test.size(): %u\n", mlm_pool_test.size());
         }
-        CHECK(mlm_pool_test.getMaximumSize() == 3); // this tests the policy that excess clients
-                                                     // that were created are dropped
-        printf("OK");
+        printf("OK\n");
 
         printf("\n ---- no reply ----\n");
         {
@@ -139,8 +355,11 @@ TEST_CASE("mlm tntmlm")
 
             zmsg_t* reply = ui_client->recv("uuid1", 1);
             CHECK(reply == nullptr);
+
+            reply = ui_client->recv("BAD-UUID", 1); // BAD-UUID message has been consumed
+            CHECK(reply == nullptr);
         }
-        printf("OK");
+        printf("OK\n");
 
         printf("\n ---- send - correct reply - expect bad uuid ----\n");
         {
@@ -163,7 +382,7 @@ TEST_CASE("mlm tntmlm")
             zmsg_t* reply = ui_client->recv("BAD-UUID", 1);
             CHECK(reply == nullptr);
         }
-        printf("OK");
+        printf("OK\n");
 
         printf("\n ---- send - reply 3x with bad uuid first - then correct reply ----\n");
         {
@@ -217,10 +436,12 @@ TEST_CASE("mlm tntmlm")
             zstr_free(&tmp);
             zmsg_destroy(&reply);
         }
-        printf("OK");
+        printf("OK\n");
+
         printf("\n ---- Simulate thread switch ----\n");
         {
             MlmClientPool::Ptr ui_client = mlm_pool_test.get();
+            CHECK(ui_client.getPointer() != NULL);
 
             zmsg_t* msg = zmsg_new();
             zmsg_addstr(msg, "uuid25");
@@ -259,11 +480,45 @@ TEST_CASE("mlm tntmlm")
             zstr_free(&tmp);
             zmsg_destroy(&reply);
         }
-        // TODO: test for requestreply
-        mlm_client_destroy(&agent1);
-        mlm_client_destroy(&agent2);
+        printf("OK\n");
+
+        printf("\n ---- requestreply ----\n");
+        {
+            MlmClientPool::Ptr ui_client = mlm_pool_test.get();
+            CHECK(ui_client.getPointer() != NULL);
+
+            // -bad- hola request, msg consumed, no reply (timedout)
+            {
+                zmsg_t* msg = zmsg_new();
+                REQUIRE(msg);
+                zmsg_addstr(msg, "hola");
+                zmsg_t* reply = ui_client->requestreply(TEST_SERVER_ADDRESS, "hola-request", 1, &msg);
+                CHECK(!msg);
+                CHECK(!reply);
+            }
+            // -good- hello request, msg consumed, reply expected
+            {
+                zmsg_t* msg = zmsg_new();
+                REQUIRE(msg);
+                zmsg_addstr(msg, "hello");
+                zmsg_t* reply = ui_client->requestreply(TEST_SERVER_ADDRESS, "hello-request", 1, &msg);
+                CHECK(!msg);
+                CHECK(reply);
+                char* s0 = zmsg_popstr(reply);
+                CHECK((s0 && streq(s0, TEST_SERVER_HELLO_RESPONSE)));
+                zstr_free(&s0);
+                zmsg_destroy(&reply);
+            }
+        }
+        printf("OK\n");
     }
 
+    printf("\n ---- cleanup ----\n");
+
+    mlm_client_destroy(&agent2);
+    mlm_client_destroy(&agent1);
+    zactor_destroy(&tntmlm_test_actor);
     zactor_destroy(&server);
-    printf("OK");
+
+    printf("OK\n");
 }
