@@ -32,7 +32,7 @@ class MlmClient
 public:
     static const std::string ENDPOINT;
 
-    MlmClient();
+    MlmClient(const std::string& addressPrefix = "rest.");
     virtual ~MlmClient();
 
     // timeout <0, 300> seconds, greater number trimmed
@@ -64,5 +64,5 @@ private:
     mlm_client_t* _client{nullptr};
     zuuid_t*      _uuid{nullptr};
     zpoller_t*    _poller{nullptr};
-    std::string   _clientAddressPrefix{"rest."};
+    std::string   _clientAddressPrefix;
 };

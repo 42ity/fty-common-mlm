@@ -35,8 +35,10 @@ MlmClientPool mlm_pool{20};
 
 const std::string MlmClient::ENDPOINT = MLM_ENDPOINT;
 
-MlmClient::MlmClient()
+MlmClient::MlmClient(const std::string& addressPrefix)
 {
+    _clientAddressPrefix = addressPrefix;
+
     _client = mlm_client_new();
     if (!_client) {
         log_error("client creation failed");
