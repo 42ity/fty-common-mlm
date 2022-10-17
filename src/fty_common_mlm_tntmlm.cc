@@ -38,7 +38,16 @@ const std::string MlmClient::ENDPOINT = MLM_ENDPOINT;
 MlmClient::MlmClient()
 {
     _client = mlm_client_new();
-    _poller = zpoller_new(mlm_client_msgpipe(_client), NULL);
+    if (!_client) {
+        log_error("client creation failed");
+    }
+    else {
+        _poller = zpoller_new(mlm_client_msgpipe(_client), NULL);
+        if (!_poller) {
+            log_error("poller creation failed");
+        }
+    }
+
     _uuid   = zuuid_new();
 
     connect();
@@ -104,13 +113,21 @@ zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout_s)
 
 int MlmClient::sendto(const std::string& address, const std::string& subject, uint32_t timeout_s, zmsg_t** content_p)
 {
+    if (!(content_p && *content_p)) {
+        log_debug("content_p is invalid");
+        return -1;
+    }
+
     if (!connected() && !connect()) {
+        zmsg_destroy(content_p);
         return -1;
     }
 
     int r = mlm_client_sendto(_client, address.c_str(), subject.c_str(), NULL, timeout_s * 1000, content_p);
+    zmsg_destroy(content_p);
+
     if (r != 0) {
-        log_error("Sending request to %s (subject: %s) failed with result %d.", address.c_str(), subject.c_str(), r);
+        log_error("Send request to %s failed (subject: %s, r: %d)", address.c_str(), subject.c_str(), r);
     }
 
     return r;
@@ -169,7 +186,7 @@ zmsg_t* MlmClient::requestreply(
         zmsg_destroy(content_p);
 
         if (r != 0) {
-            log_error("Sending request to %s (subject: %s) failed with result %d.", address.c_str(), subject.c_str(), r);
+            log_error("Send request to %s failed (subject: %s, r: %d)", address.c_str(), subject.c_str(), r);
             return NULL;
         }
     }
