@@ -182,13 +182,12 @@ public:
     unsigned size() const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        return m_freePool.size();
+        return static_cast<unsigned>(m_freePool.size());
     }
 
     unsigned getCurrentSize() const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_freePool.size();
+        return size();
     }
 
     void setMaximumSize(unsigned s)

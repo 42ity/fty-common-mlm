@@ -29,15 +29,27 @@
 #include "fty_common_mlm_tntmlm.h"
 #include "fty_common_mlm_utils.h"
 #include "fty_common_mlm_pool.h"
+#include <fty_log.h>
 
 MlmClientPool mlm_pool{20};
 
 const std::string MlmClient::ENDPOINT = MLM_ENDPOINT;
 
-MlmClient::MlmClient()
+MlmClient::MlmClient(const std::string& addressPrefix)
 {
+    _clientAddressPrefix = addressPrefix;
+
     _client = mlm_client_new();
-    _poller = zpoller_new(mlm_client_msgpipe(_client), NULL);
+    if (!_client) {
+        log_error("client creation failed");
+    }
+    else {
+        _poller = zpoller_new(mlm_client_msgpipe(_client), NULL);
+        if (!_poller) {
+            log_error("poller creation failed");
+        }
+    }
+
     _uuid   = zuuid_new();
 
     connect();
@@ -62,6 +74,7 @@ zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout_s)
     }
 
     if (timeout_s > 300) { // 300 s. max
+        log_debug("timeout_s (%us) reduced to 300s", timeout_s);
         timeout_s = 300;
     }
 
@@ -76,7 +89,7 @@ zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout_s)
 
         void* which = zpoller_wait(_poller, timeleft_ms);
         if (!which) {
-            log_debug("zpoller_wait() returned NULL. (timeleft_ms: %dms, expired: %s, terminated: %s)",
+            log_debug("poller_wait: timeleft: %dms, expired: %s, terminated: %s",
                 timeleft_ms,
                 (zpoller_expired(_poller) ? "true" : "false"),
                 (zpoller_terminated(_poller) ? "true" : "false"));
@@ -85,11 +98,12 @@ zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout_s)
 
         zmsg_t* msg = mlm_client_recv(_client);
         if (msg) {
-            char* uuid_recv = zmsg_popstr(msg);
-            if (!(uuid_recv && streq(uuid_recv, uuid.c_str()))) {
+            char* rx_uuid = zmsg_popstr(msg);
+            if (!(rx_uuid && streq(rx_uuid, uuid.c_str()))) {
+                log_info("Discard unexpected/invalid message from %s (subject %s)", sender(), this->subject());
                 zmsg_destroy(&msg);
             }
-            zstr_free(&uuid_recv);
+            zstr_free(&rx_uuid);
             if (msg) {
                 return msg; // msg received
             }
@@ -101,11 +115,23 @@ zmsg_t* MlmClient::recv(const std::string& uuid, uint32_t timeout_s)
 
 int MlmClient::sendto(const std::string& address, const std::string& subject, uint32_t timeout_s, zmsg_t** content_p)
 {
+    if (!(content_p && *content_p)) {
+        log_debug("content_p is invalid");
+        return -1;
+    }
+
     if (!connected() && !connect()) {
+        zmsg_destroy(content_p);
         return -1;
     }
 
     int r = mlm_client_sendto(_client, address.c_str(), subject.c_str(), NULL, timeout_s * 1000, content_p);
+    zmsg_destroy(content_p);
+
+    if (r != 0) {
+        log_error("Send request to %s failed (subject: %s, r: %d)", address.c_str(), subject.c_str(), r);
+    }
+
     return r;
 }
 
@@ -127,40 +153,42 @@ zmsg_t* MlmClient::requestreply(
         zmsg_destroy(content_p);
         return NULL;
     }
+
     if (!_poller) {
         log_debug("poller not initialized");
         zmsg_destroy(content_p);
         return NULL;
     }
 
-    std::string uid;
+    std::string uuid;
     {
         zuuid_t* zuuid = zuuid_new();
-        uid = zuuid ? zuuid_str(zuuid) : std::to_string(random());
+        uuid = zuuid ? zuuid_str(zuuid) : std::to_string(random());
         zuuid_destroy(&zuuid);
 
-        if (uid.empty()) {
-            log_debug("uid is empty");
+        if (uuid.empty()) {
+            log_debug("uuid is inconsistent");
             zmsg_destroy(content_p);
             return NULL;
         }
     }
 
     if (timeout_s > 300) { // 300 s. max
+        log_debug("timeout_s (%us) reduced to 300s", timeout_s);
         timeout_s = 300;
     }
 
     {
         const int sendto_timeout_ms = 5000;
 
-        // prepend 'REQUEST'/uid to message and send it
-        zmsg_pushstr(*content_p, uid.c_str());
+        // prepend 'REQUEST'/uuid to message and send it
+        zmsg_pushstr(*content_p, uuid.c_str());
         zmsg_pushstr(*content_p, "REQUEST");
         int r = mlm_client_sendto(_client, address.c_str(), subject.c_str(), NULL, sendto_timeout_ms, content_p);
         zmsg_destroy(content_p);
 
         if (r != 0) {
-            log_error("Sending request to %s (subject: %s) failed with result %d.", address.c_str(), subject.c_str(), r);
+            log_error("Send request to %s failed (subject: %s, r: %d)", address.c_str(), subject.c_str(), r);
             return NULL;
         }
     }
@@ -177,29 +205,29 @@ zmsg_t* MlmClient::requestreply(
 
         void* which = zpoller_wait(_poller, timeleft_ms);
         if (!which) {
-            log_debug("zpoller_wait() returned NULL. (timeleft_ms: %dms, expired: %s, terminated: %s)",
+            log_debug("zpoller_wait: timeleft_ms: %dms, expired: %s, terminated: %s",
                 timeleft_ms,
                 (zpoller_expired(_poller) ? "true" : "false"),
                 (zpoller_terminated(_poller) ? "true" : "false"));
             break;
         }
 
-        zmsg_t* reply = mlm_client_recv(_client);
-        if (reply) {
-            char* msg_uuid = zmsg_popstr(reply);
-            char* msg_cmd  = zmsg_popstr(reply);
-            if (!(msg_cmd && streq(msg_cmd, "REPLY"))
-                || !(msg_uuid && streq(msg_uuid, uid.c_str()))
+        zmsg_t* msg = mlm_client_recv(_client);
+        if (msg) {
+            char* rx_uuid = zmsg_popstr(msg);
+            char* rx_cmd  = zmsg_popstr(msg);
+            if (!(rx_cmd && streq(rx_cmd, "REPLY"))
+                || !(rx_uuid && streq(rx_uuid, uuid.c_str()))
             ){
                 // this is not the message we are waiting for
-                log_info("Discarting unexpected/invalid message from %s (topic %s)", sender(), this->subject());
-                zmsg_destroy(&reply);
+                log_info("Discard unexpected/invalid message from %s (subject %s)", sender(), this->subject());
+                zmsg_destroy(&msg);
             }
-            zstr_free(&msg_cmd);
-            zstr_free(&msg_uuid);
+            zstr_free(&rx_cmd);
+            zstr_free(&rx_uuid);
 
-            if (reply) {
-                return reply; // msg received
+            if (msg) {
+                return msg; // msg received
             }
         }
     }
@@ -215,17 +243,19 @@ bool MlmClient::connect()
     }
 
     std::string id{_uuid ? zuuid_str_canonical(_uuid) : std::to_string(random())};
-    std::string name{"rest." + id};
+    std::string address{_clientAddressPrefix + id};
 
     const int timeout_ms = 5000;
-    int r = mlm_client_connect(_client, ENDPOINT.c_str(), timeout_ms, name.c_str());
+    int r = mlm_client_connect(_client, ENDPOINT.c_str(), timeout_ms, address.c_str());
+
     if (r == -1) {
-        log_error("mlm_client_connect (endpoint = '%s', timeout = %d, address = '%s') failed",
+        log_error("mlm_client_connect failed (endpoint: %s, timeout: %dms, address: %s)",
             ENDPOINT.c_str(),
             timeout_ms,
-            name.c_str());
+            address.c_str());
         return false;
     }
+
     return true;
 }
 
