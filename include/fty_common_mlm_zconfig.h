@@ -28,8 +28,8 @@ namespace mlm {
 class ZConfig
 {
 private:
-    // attributs
-    zconfig_t* m_ptrConfig;
+    // attributes
+    zconfig_t* m_ptrConfig{nullptr};
 
 
 public:

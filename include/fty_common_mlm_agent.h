@@ -64,8 +64,8 @@ protected:
      * \param pipe Pipe of the zactor_t
      * \param endpoint Endpoint to connect to
      * \param address Name of the established connection
-     * \param pollerTimeout Timeout of poller and rough interval between tick() invocations (-1 to disable)
-     * \param connectionTimeout Timeout for connection attempt
+     * \param pollerTimeout Timeout (msec) of poller and rough interval between tick() invocations (-1 to disable)
+     * \param connectionTimeout Timeout (msec) for connection attempt
      */
     MlmAgent(zsock_t* pipe, const char* endpoint = nullptr, const char* address = nullptr, int pollerTimeout = -1,
         int connectionTimeout = 5000);
@@ -73,7 +73,7 @@ protected:
      * \brief connect to broker malamute
      * \param endpoint Endpoint to connect to
      * \param address Name of the established connection
-     * \param connectionTimeout Timeout for connection attempt
+     * \param connectionTimeout Timeout (msec) for connection attempt
      */
     virtual void connect(const char* endpoint, const char* address, int connectionTimeout = 5000);
     /**
@@ -134,7 +134,7 @@ protected:
     }
 
     /**
-     * \brief Getter for zsock_t
+     * \brief Getter for zsock_t pipe
      * \return zsock_t
      */
     zsock_t* pipe()
@@ -146,8 +146,8 @@ private:
     mlm_client_t* m_client{nullptr};
     std::string   m_address;
     zsock_t*      m_pipe{nullptr};
-    int64_t       m_lastTick;
-    int           m_pollerTimeout;
+    int64_t       m_lastTick{0};
+    int           m_pollerTimeout{0};
     zpoller_t*    m_defaultZpoller{nullptr};
 };
 
