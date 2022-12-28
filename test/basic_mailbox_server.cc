@@ -32,14 +32,13 @@ static const char* testAgentName = "fty_common_mlm_basic_mailbox_server_test";
 static void fty_common_mlm_basic_mailbox_server_test_actor(zsock_t* pipe, void* /*args*/)
 {
     fty::EchoServer server;
-
     mlm::MlmBasicMailboxServer agent(pipe, server, testAgentName, testEndpoint);
     agent.mainloop();
 }
 
 TEST_CASE("Basic mailbox server")
 {
-    printf(" * fty_common_mlm_basic_mailbox_server: ");
+    printf(" * fty_common_mlm_basic_mailbox_server: \n");
 
     zactor_t* broker = zactor_new(mlm_server, const_cast<char*>("Malamute"));
     zstr_sendx(broker, "BIND", testEndpoint, NULL);
