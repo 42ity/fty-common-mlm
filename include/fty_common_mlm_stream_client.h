@@ -39,7 +39,6 @@ public:
     explicit MlmStreamClient(const std::string& clientId, const std::string& stream, uint32_t timeout = 1000,
         const std::string& endPoint = "ipc://@/malamute");
 
-
     ~MlmStreamClient() override;
 
     // method for publishing
@@ -50,10 +49,10 @@ public:
     void     unsubscribe(uint32_t subId) override;
 
 private:
-    // Common attributs
+    // Common attributes
     std::string m_clientId;
     std::string m_stream;
-    uint32_t    m_timeout;
+    uint32_t    m_timeout{0};
     std::string m_endpoint;
 
     // Specific to StreamSubscriber
@@ -61,12 +60,11 @@ private:
 
     std::mutex              m_listenerCallbackMutex;
     std::condition_variable m_listenerStarted;
-    std::exception_ptr      m_exPtr         = nullptr;
-    bool                    m_stopRequested = false;
+    std::exception_ptr      m_exPtr{nullptr};
+    bool                    m_stopRequested{false};
 
-    uint32_t                     m_counter = 0;
+    uint32_t                     m_counter{0};
     std::map<uint32_t, Callback> m_callbacks;
-
 
     // Private methods
     void publishOnBus(const std::string& type, const std::vector<std::string>& payload);

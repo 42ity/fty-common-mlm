@@ -51,7 +51,6 @@ MlmStreamClient::MlmStreamClient(
     , m_timeout(timeout)
     , m_endpoint(endPoint)
 {
-    (void)m_timeout;
 }
 
 MlmStreamClient::~MlmStreamClient()
@@ -78,45 +77,43 @@ void MlmStreamClient::publishOnBus(const std::string& type, const std::vector<st
     // std::cerr << "Publish on Bus <" << messageType << ">:" << payload << std::endl;
 
     mlm_client_t* client = mlm_client_new();
-
     if (client == nullptr) {
-        mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: NULL client pointer");
     }
 
-    // create a unique sender id: <m_cliendId>.PUB.<m_stream>[thread id in hexa]
-    pid_t threadId = gettid();
+    // create a unique sender id: <m_cliendId>.PUB.<m_stream>.[thread id in hexa]
+    std::string uniqueId;
+    {
+        pid_t threadId = gettid();
+        std::stringstream ss;
+        ss << m_clientId << ".PUB." << m_stream << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex
+           << threadId;
+        uniqueId = ss.str();
+    }
 
-    std::stringstream ss;
-    ss << m_clientId << ".PUB." << m_stream << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex
-       << threadId;
-
-    std::string uniqueId = ss.str();
-
-    int rc = mlm_client_connect(client, m_endpoint.c_str(), 1000, uniqueId.c_str());
-
-    if (rc != 0) {
+    int r = mlm_client_connect(client, m_endpoint.c_str(), 1000, uniqueId.c_str());
+    if (r != 0) {
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: Error connecting to endpoint <" + m_endpoint + ">");
     }
 
-    rc = mlm_client_set_producer(client, m_stream.c_str());
-    if (rc != 0) {
+    r = mlm_client_set_producer(client, m_stream.c_str());
+    if (r != 0) {
         mlm_client_destroy(&client);
-        throw std::runtime_error("Malamute error: Impossible to become publisher of stream <" + m_stream + ">");
+        throw std::runtime_error("Malamute error: Impossible to become producer on stream <" + m_stream + ">");
     }
 
     zmsg_t* notification = zmsg_new();
-    for (const std::string& frame : payload) {
+    for (auto& frame : payload) {
         zmsg_addstr(notification, frame.c_str());
     }
 
-    rc = mlm_client_send(client, type.c_str(), &notification);
+    r = mlm_client_send(client, type.c_str(), &notification);
 
     zmsg_destroy(&notification);
     mlm_client_destroy(&client);
 
-    if (rc != 0) {
+    if (r != 0) {
         throw std::runtime_error("Malamute error: Impossible to publish on stream <" + m_stream + ">");
     }
 }
@@ -173,23 +170,23 @@ void MlmStreamClient::listener()
             throw std::runtime_error("Malamute error: NULL client pointer");
         }
 
-        // create a unique id: <m_clientId>-SECW_NOTIFICATIONS.[thread id in hexa]
-        pid_t threadId = gettid();
+        // create a unique id: <m_clientId>.SUB.<m_stream>.[thread id in hexa]
+        std::string uniqueId;
+        {
+            pid_t threadId = gettid();
+            std::stringstream ss;
+            ss << m_clientId << ".SUB." << m_stream << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex
+               << threadId;
+            uniqueId = ss.str();
+        }
 
-        std::stringstream ss;
-        ss << m_clientId << ".SUB." << m_stream << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex
-           << threadId;
-
-        std::string uniqueId = ss.str();
-
-        int rc = mlm_client_connect(client, m_endpoint.c_str(), 1000, uniqueId.c_str());
-
-        if (rc != 0) {
+        int r = mlm_client_connect(client, m_endpoint.c_str(), 1000, uniqueId.c_str());
+        if (r != 0) {
             throw std::runtime_error("Malamute error: Error connecting to endpoint <" + m_endpoint + ">");
         }
 
-        rc = mlm_client_set_consumer(client, m_stream.c_str(), ".*");
-        if (rc != 0) {
+        r = mlm_client_set_consumer(client, m_stream.c_str(), ".*");
+        if (r != 0) {
             throw std::runtime_error("Malamute error: Impossible to become consumer of stream <" + m_stream + ">");
         }
 
@@ -220,12 +217,9 @@ void MlmStreamClient::listener()
                 ZmsgGuard msg(mlm_client_recv(client));
 
                 std::vector<std::string> payload;
-                while(true) {
-                    ZstrGuard frame(zmsg_popstr(msg));
-                    if (!frame) {
-                        break;
-                    }
-                    payload.push_back(std::string{frame});
+                for (char* s = zmsg_popstr(msg); s; s = zmsg_popstr(msg)) {
+                    payload.push_back(s);
+                    zstr_free(&s);
                 }
 
                 // process the callbacks
@@ -233,8 +227,8 @@ void MlmStreamClient::listener()
                 for (const auto& item : m_callbacks) {
                     try {
                         item.second(payload);
-                    } catch (...) // Show Must Go On => Log errors and continue
-                    {
+                    }
+                    catch (...) {
                         // log_error("Error during processing callback [%i]: unknown error", item.first);
                     }
                 }
