@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 #include <czmq.h>
+
 //  @interface
 typedef struct _fty_uuid_t fty_uuid_t;
 
