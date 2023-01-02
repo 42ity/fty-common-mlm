@@ -25,7 +25,6 @@
 #include <fty_common_sync_server.h>
 #include <string>
 
-
 namespace mlm {
 
 /**
@@ -50,7 +49,7 @@ private:
     bool handleMailbox(zmsg_t* message) override;
 
 private:
-    // attributs
+    // members
     fty::SyncServer& m_server;
     std::string      m_name;
     std::string      m_endpoint;

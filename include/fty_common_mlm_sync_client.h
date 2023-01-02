@@ -42,7 +42,7 @@ private:
     // attributs
     std::string m_clientId;
     std::string m_destination;
-    uint32_t    m_timeout;
+    uint32_t    m_timeout{0};
     std::string m_endpoint;
 };
 

@@ -19,13 +19,13 @@
     =========================================================================
 */
 
-#include "fty_common_mlm_utils.h"
 #include <catch2/catch.hpp>
+#include "fty_common_mlm_utils.h"
 #include <fty_common_utf8.h>
 #include <fty_log.h>
 #include <cxxtools/jsondeserializer.h>
 
-TEST_CASE("mlm utils")
+TEST_CASE("mlm utils utf8")
 {
     /* These tests are here because:
      * - JSON used for communication inside the system is escaped before sending via ZMQ messages
@@ -99,17 +99,15 @@ TEST_CASE("mlm utils")
         // clang-format on
 
         for (auto const& item : tests) {
-            std::string json;
             std::string escaped = UTF8::escape(item.first);
 
+            std::string json;
             json.assign("{ \"string\" : ").append("\"").append(escaped).append("\" }");
 
-            std::stringstream           input(json, std::ios_base::in);
-            cxxtools::JsonDeserializer  deserializer(input);
-            cxxtools::SerializationInfo si;
-            // This is a bit crappy. We may either convert the full project
-            // to C++ or otherwise keep C as pure C
             try {
+                std::stringstream           input(json, std::ios_base::in);
+                cxxtools::JsonDeserializer  deserializer(input);
+                cxxtools::SerializationInfo si;
                 deserializer.deserialize(si);
             } catch (const std::exception& e) {
                 // This will generate a failure in case of exception
@@ -137,12 +135,10 @@ TEST_CASE("mlm utils")
             std::string json;
             json.assign("{ \"read\" : ").append("\"").append(UTF8::escape(it)).append("\" }");
 
-            std::stringstream           input(json, std::ios_base::in);
-            cxxtools::JsonDeserializer  deserializer(input);
             cxxtools::SerializationInfo si;
-            // This is a bit crappy. We may either convert the full project
-            // to C++ or otherwise keep C as pure C
             try {
+                std::stringstream           input(json, std::ios_base::in);
+                cxxtools::JsonDeserializer  deserializer(input);
                 deserializer.deserialize(si);
             } catch (std::exception& e) {
                 // This will generate a failure in case of exception
@@ -163,3 +159,44 @@ TEST_CASE("mlm utils")
     printf("fty-common-mlm-utils OK\n");
 }
 
+TEST_CASE("mlm utils zhash/map")
+{
+    using namespace MlmUtils;
+
+    {
+        auto map = zhash_to_map(nullptr);
+        CHECK(map.size() == 0);
+    }
+    {
+        zhash_t* hash = zhash_new();
+        CHECK(hash);
+        auto map = zhash_to_map(hash);
+        CHECK(map.size() == 0);
+        zhash_destroy(&hash);
+    }
+    {
+        zhash_t* hash = map_to_zhash({});
+        CHECK(hash);
+        CHECK(zhash_size(hash) == 0);
+        zhash_destroy(&hash);
+    }
+    {
+        std::map<std::string, std::string> map1 = {
+            {"1", "a"},
+            {"2", "b"},
+            {"3", "c"},
+        };
+
+        zhash_t* hash = map_to_zhash(map1);
+        CHECK(hash);
+        CHECK(zhash_size(hash) == map1.size());
+
+        std::map<std::string, std::string> map2;
+        map2 = zhash_to_map(hash);
+        CHECK(zhash_size(hash) == map2.size());
+
+        CHECK(map1 == map2);
+
+        zhash_destroy(&hash);
+    }
+}

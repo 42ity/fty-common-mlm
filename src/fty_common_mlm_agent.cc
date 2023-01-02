@@ -58,9 +58,10 @@ MlmAgent::MlmAgent(zsock_t* pipe, const char* endpoint, const char* address, int
 void MlmAgent::connect(const char* endpoint, const char* address, int connectionTimeout)
 {
     logDebug("{} endpoint: {}", m_address, (endpoint ? endpoint : "<null>"));
-    if (mlm_client_connect(m_client, endpoint, uint32_t(connectionTimeout), address) == -1) {
-        log_error("mlm_client_connect(endpoint = '%s', timeout = '%d', address = '%s') failed.", endpoint,
-            connectionTimeout, address);
+    int r = mlm_client_connect(m_client, endpoint, uint32_t(connectionTimeout), address);
+    if (r != 0) {
+        log_error("mlm_client_connect(endpoint = '%s', timeout = '%d', address = '%s') failed.",
+            endpoint, connectionTimeout, address);
         throw std::runtime_error("Can't connect client");
     }
 }

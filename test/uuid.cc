@@ -25,27 +25,60 @@
 
 TEST_CASE("uuid")
 {
-    printf(" * fty_uuid: ");
+    printf("uuid\n");
 
-    //  @selftest
-    //  Simple create/destroy test
+    SECTION("fty_uuid_new")
+    {
+        fty_uuid_t* self = fty_uuid_new();
+        CHECK(self);
+        fty_uuid_destroy(&self);
+        CHECK(!self);
+    }
+    SECTION("fty_uuid_calculate")
+    {
+        fty_uuid_t* self = fty_uuid_new();
+        CHECK(self);
 
-    fty_uuid_t* self = fty_uuid_new();
-    CHECK(self);
-    const char* id = fty_uuid_calculate(self, nullptr, nullptr, nullptr);
-    CHECK(streq(id, "ffffffff-ffff-ffff-ffff-ffffffffffff"));
-    id = fty_uuid_calculate(self, "EATON", "IPC3000", "LA71042052");
-    CHECK(streq(id, "c7cc6ffe-f36f-55ee-b5d4-3e40a2fe08a3"));
-    fty_uuid_destroy(&self);
+        const char* uuid = nullptr;
 
-    fty_uuid_t* fuuid = fty_uuid_new();
-    zhash_t*    ext   = zhash_new();
-    zhash_insert(ext, "model", const_cast<char*>("M1"));
-    const char* uuid = fty_uuid_create(ext, "room", fuuid);
-    CHECK(uuid);
+        uuid = fty_uuid_calculate(self, nullptr, nullptr, nullptr);
+        CHECK(streq(uuid, "ffffffff-ffff-ffff-ffff-ffffffffffff"));
 
-    zhash_destroy(&ext);
-    fty_uuid_destroy(&fuuid);
-    //  @end
-    printf("OK\n");
+        uuid = fty_uuid_calculate(self, "EATON", "IPC3000", "LA71042052");
+        CHECK(streq(uuid, "c7cc6ffe-f36f-55ee-b5d4-3e40a2fe08a3"));
+
+        fty_uuid_destroy(&self);
+        CHECK(!self);
+    }
+    SECTION("fty_uuid_create")
+    {
+        fty_uuid_t* self = fty_uuid_new();
+
+        const char* uuid = nullptr;
+
+        zhash_t* ext = zhash_new();
+        uuid = fty_uuid_create(ext, "device", self);
+        CHECK(uuid);
+        zhash_insert(ext, "model", const_cast<char*>("M1"));
+        uuid = fty_uuid_create(ext, "device", self);
+        CHECK(uuid);
+        uuid = fty_uuid_create(ext, "room", self);
+        CHECK(uuid);
+        zhash_destroy(&ext);
+
+        uuid = fty_uuid_create(nullptr, "room", self);
+        CHECK(uuid);
+
+        uuid = fty_uuid_create(nullptr, "device", self);
+        CHECK(uuid);
+
+        uuid = fty_uuid_create(nullptr, nullptr, self);
+        CHECK(uuid);
+
+        uuid = fty_uuid_create(nullptr, nullptr, nullptr);
+        CHECK(uuid);
+
+        fty_uuid_destroy(&self);
+        CHECK(!self);
+    }
 }

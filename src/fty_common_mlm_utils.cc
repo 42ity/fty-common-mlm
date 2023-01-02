@@ -28,23 +28,29 @@ namespace MlmUtils {
 std::map<std::string, std::string> zhash_to_map(zhash_t* hash)
 {
     std::map<std::string, std::string> map;
-    char*                              item = static_cast<char*>(zhash_first(hash));
-    while (item) {
-        const char* key = zhash_cursor(hash);
-        const char* val = static_cast<const char*>(zhash_lookup(hash, key));
-        if (key && val)
-            map[key] = val;
-        item = static_cast<char*>(zhash_next(hash));
+
+    if (hash) {
+        for (void* it = zhash_first(hash); it; it = zhash_next(hash)) {
+            const char* key = zhash_cursor(hash);
+            const char* val = static_cast<const char*>(it);
+            if (key && val) {
+                map[key] = val;
+            }
+        }
     }
+
     return map;
 }
 
-
-zhash_t* map_to_zhash(std::map<std::string, std::string> map_to_convert)
+zhash_t* map_to_zhash(const std::map<std::string, std::string>& inMap)
 {
     zhash_t* hash = zhash_new();
-    for (auto& i : map_to_convert) {
-        zhash_insert(hash, i.first.c_str(), const_cast<char*>(i.second.c_str()));
+
+    if (hash) {
+        zhash_autofree(hash);
+        for (auto& it : inMap) {
+            zhash_insert(hash, it.first.c_str(), const_cast<char*>(it.second.c_str()));
+        }
     }
 
     return hash;

@@ -64,27 +64,26 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     }
 
     // create a unique sender id: <clientId>.[thread id in hexa]
-    pid_t threadId = gettid();
+    std::string uniqueId;
+    {
+        pid_t threadId = gettid();
+        std::stringstream ss;
+        ss << m_clientId << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex << threadId;
+        uniqueId = ss.str();
+    }
 
-    std::stringstream ss;
-    ss << m_clientId << "." << std::setfill('0') << std::setw(sizeof(pid_t) * 2) << std::hex << threadId;
-
-    std::string uniqueId = ss.str();
-
-    int rc = mlm_client_connect(client, m_endpoint.c_str(), m_timeout, uniqueId.c_str());
-
-    if (rc != 0) {
+    int r = mlm_client_connect(client, m_endpoint.c_str(), m_timeout, uniqueId.c_str());
+    if (r != 0) {
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: Error connecting to endpoint <" + m_endpoint + ">");
     }
 
     // Prepare the request:
+    // add a correlationId and all the payload
     ZuuidGuard zuuid(zuuid_new());
     zmsg_t* request = zmsg_new();
     zmsg_addstr(request, zuuid_str_canonical(zuuid));
-
-    // add all the payload
-    for (const std::string& frame : payload) {
+    for (auto& frame : payload) {
         zmsg_addstr(request, frame.c_str());
     }
 
@@ -95,9 +94,9 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
     }
 
     // send the message
-    int rv = mlm_client_sendto(client, m_destination.c_str(), "REQUEST", nullptr, m_timeout, &request);
-    zmsg_destroy(&request); // secure
-    if (rv != 0) {
+    r = mlm_client_sendto(client, m_destination.c_str(), "REQUEST", nullptr, m_timeout, &request);
+    zmsg_destroy(&request);
+    if (r != 0) {
         mlm_client_destroy(&client);
         throw std::runtime_error("Malamute error: Cannot send message");
     }
@@ -120,7 +119,7 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
             throw std::runtime_error("Malamute error: zsys_interrupted");
         }
 
-        if (which != mlm_client_msgpipe(client)) {
+        if (which == nullptr) {
            mlm_client_destroy(&client);
            throw std::runtime_error("Malamute error: Timeout when read response");
         }
@@ -138,12 +137,9 @@ std::vector<std::string> MlmSyncClient::syncRequestWithReply(const std::vector<s
 
     // Unstack all the other frames
     std::vector<std::string> receivedFrames;
-    while (true) {
-        ZstrGuard frame(zmsg_popstr(recv));
-        if (!frame) {
-            break;
-        }
-        receivedFrames.push_back(std::string{frame});
+    for (char* s = zmsg_popstr(recv); s; s = zmsg_popstr(recv)) {
+        receivedFrames.push_back(s);
+        zstr_free(&s);
     }
 
     return receivedFrames;

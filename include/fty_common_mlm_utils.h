@@ -30,10 +30,11 @@
 
 namespace MlmUtils {
 
-// convert zhash_t to std::map
+// convert zhash_t to std::string's map
 std::map<std::string, std::string> zhash_to_map(zhash_t* hash);
 
-// convert map to zhash_t and take responsobility for destorying it
-zhash_t* map_to_zhash(std::map<std::string, std::string> map_to_convert);
+// convert std::string's map to zhash_t
+// caller must destroy the returned zhash_t* after use
+zhash_t* map_to_zhash(const std::map<std::string, std::string>& inMap);
 
 } // namespace MlmUtils
