@@ -21,7 +21,7 @@
 
 #include <catch2/catch.hpp>
 #include "fty_common_mlm_utils.h"
-#include "cxxtools/serializationinfo.h"
+#include <cxxtools/serializationinfo.h>
 #include <fty_common_utf8.h>
 #include <fty_log.h>
 #include <fty_common_json.h>
