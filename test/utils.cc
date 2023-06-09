@@ -21,9 +21,10 @@
 
 #include <catch2/catch.hpp>
 #include "fty_common_mlm_utils.h"
+#include <cxxtools/serializationinfo.h>
 #include <fty_common_utf8.h>
 #include <fty_log.h>
-#include <cxxtools/jsondeserializer.h>
+#include <fty_common_json.h>
 
 TEST_CASE("mlm utils utf8")
 {
@@ -105,10 +106,8 @@ TEST_CASE("mlm utils utf8")
             json.assign("{ \"string\" : ").append("\"").append(escaped).append("\" }");
 
             try {
-                std::stringstream           input(json, std::ios_base::in);
-                cxxtools::JsonDeserializer  deserializer(input);
                 cxxtools::SerializationInfo si;
-                deserializer.deserialize(si);
+                JSON::readFromString(json, si);
             } catch (const std::exception& e) {
                 // This will generate a failure in case of exception
                 FAIL(e.what());
@@ -137,9 +136,7 @@ TEST_CASE("mlm utils utf8")
 
             cxxtools::SerializationInfo si;
             try {
-                std::stringstream           input(json, std::ios_base::in);
-                cxxtools::JsonDeserializer  deserializer(input);
-                deserializer.deserialize(si);
+                JSON::readFromString(json, si);
             } catch (std::exception& e) {
                 // This will generate a failure in case of exception
                 FAIL(e.what());
