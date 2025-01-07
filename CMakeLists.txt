@@ -56,7 +56,6 @@ etn_test_target(${PROJECT_NAME}
         test/basic_mailbox_server.cc
         test/tntmlm.cc
         test/utils.cc
-        test/uuid.cc
         test/zconfig.cc
         test/main.cpp
     USES
