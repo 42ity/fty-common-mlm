@@ -24,7 +24,6 @@
 //  all headers
 #include "fty_common_mlm_guards.h"
 #include "fty_common_mlm_utils.h"
-#include "fty_common_mlm_uuid.h"
 #include "fty_common_mlm_zconfig.h"
 #include "fty_common_mlm_agent.h"
 #include "fty_common_mlm_basic_mailbox_server.h"
