@@ -18,7 +18,6 @@ etn_target(shared ${PROJECT_NAME}
         fty_common_mlm_agent.h
         fty_common_mlm_guards.h
         fty_common_mlm_tntmlm.h
-        fty_common_mlm_uuid.h
         fty_common_mlm_basic_mailbox_server.h
         fty_common_mlm.h
         fty_common_mlm_stream_client.h
@@ -56,7 +55,6 @@ etn_test_target(${PROJECT_NAME}
         test/basic_mailbox_server.cc
         test/tntmlm.cc
         test/utils.cc
-        test/uuid.cc
         test/zconfig.cc
         test/main.cpp
     USES
