@@ -37,10 +37,9 @@ etn_target(shared ${PROJECT_NAME}
     FLAGS -Wno-logical-op
     USES
         czmq
+        mlm
         fty_common
         fty_common_logging
-        mlm
-        openssl
         pthread
 )
 
