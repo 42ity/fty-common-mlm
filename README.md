@@ -8,7 +8,7 @@ This is a library providing :
 To build the `fty-common-mlm` project run:
 
 ```bash
-cmake -B build -DBUILD\_TESTING=On
+cmake -B build -DBUILD_TESTING=On
 cd build
 make
 ctest # run tests
